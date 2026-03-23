@@ -21,7 +21,7 @@ mod test {
     #[test]
     fn test_adding_a_single_step() {
         let event_stream = vec![
-            StepEvent::AddSync(String::from("1"), "alpha".to_string()),
+            StepEvent::AddSync(String::from("1"), "alpha".to_string(), None),
         ];
         let execution_state = restore(event_stream);
         assert_eq!(execution_state.step_states.len(), 1);
@@ -31,9 +31,9 @@ mod test {
     #[test]
     fn test_adding_multiple_steps() {
         let event_stream = vec![
-            StepEvent::AddSync(String::from("1"), "alpha".to_string()),
-            StepEvent::AddSync(String::from("2"), "beta".to_string()),
-            StepEvent::AddSync(String::from("3"), "gamma".to_string()),
+            StepEvent::AddSync(String::from("1"), "alpha".to_string(), None),
+            StepEvent::AddSync(String::from("2"), "beta".to_string(), None),
+            StepEvent::AddSync(String::from("3"), "gamma".to_string(), None),
         ];
         let execution_state = restore(event_stream);
         assert_eq!(execution_state.step_states.len(), 3);
@@ -42,7 +42,7 @@ mod test {
     #[test]
     fn single_step_progression() {
         let event_stream = vec![
-            StepEvent::AddSync(String::from("1"), "alpha".to_string()),
+            StepEvent::AddSync(String::from("1"), "alpha".to_string(), None),
             StepEvent::Complete(String::from("1"), None),
         ];
         let execution_state = restore(event_stream);
@@ -54,9 +54,9 @@ mod test {
     #[test]
     fn two_step_progression() {
         let event_stream = vec![
-            StepEvent::AddSync(String::from("1"), "alpha".to_string()),
+            StepEvent::AddSync(String::from("1"), "alpha".to_string(), None),
             StepEvent::Complete(String::from("1"), None),
-            StepEvent::AddSync(String::from("2"), "beta".to_string()),
+            StepEvent::AddSync(String::from("2"), "beta".to_string(), None),
             StepEvent::Complete(String::from("2"), None),
         ];
         let execution_state = restore(event_stream);
@@ -68,11 +68,11 @@ mod test {
     #[test]
     fn three_step_failure() {
         let event_stream = vec![
-            StepEvent::AddSync(String::from("1"), "alpha".to_string()),
+            StepEvent::AddSync(String::from("1"), "alpha".to_string(), None),
             StepEvent::Complete(String::from("1"), None),
-            StepEvent::AddSync(String::from("2"), "beta".to_string()),
+            StepEvent::AddSync(String::from("2"), "beta".to_string(), None),
             StepEvent::Complete(String::from("2"), None),
-            StepEvent::AddSync(String::from("3"), "gamma".to_string()),
+            StepEvent::AddSync(String::from("3"), "gamma".to_string(), None),
             StepEvent::Failed(String::from("3"), Some("something went wrong".into())),
         ];
         let execution_state = restore(event_stream);
@@ -87,7 +87,7 @@ mod test {
     #[test]
     fn async_step_start_running() {
         let event_stream = vec![
-            StepEvent::AddAsync(String::from("1"), "fetch".to_string()),
+            StepEvent::AddAsync(String::from("1"), "fetch".to_string(), None),
             StepEvent::Start(String::from("1")),
         ];
         let execution_state = restore(event_stream);

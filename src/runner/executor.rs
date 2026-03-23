@@ -1,4 +1,4 @@
-use log::trace;
+use log::{error, trace};
 use crate::api::events::StepEvent;
 use crate::api::steps::{Step, SyncStep};
 use crate::runner::registry::Registry;
@@ -8,18 +8,33 @@ pub fn executor(registry: &Registry, step: &Step) -> StepEvent {
     trace!("executor - step: {:?}", step);
     let id = step.id().to_string();
     match step {
+        // SYNC
         Step::Sync(s) => {
-            let kind = match s {
-                SyncStep::Ready(core) => &core.kind,
-                _ => return StepEvent::Error(id, Some("Sync step is not in Ready state".to_string())),
-            };
-            match registry.get_sync_module(kind) {
-                Some(m) => StepEvent::Complete(id, Some((m.handler)())),
-                None => StepEvent::Error(id, Some("No step handler registered".to_string())),
+            match s {
+                SyncStep::Ready(core)=> {
+                    match registry.get_sync_module(&core.kind) {
+                        Some(step_module) => {
+                            let input = s.core().input.clone();
+                            let result = (step_module.handler)(input);
+                            StepEvent::Complete(id, result)
+                        }
+                        None => return StepEvent::Error(id, Some(format!("No step handler registered for: {}", core.kind ))),
+                    }
+                },
+                SyncStep::Completed { .. } => invariant_violation(&id, "executor called on step in completed state" ) ,
+                SyncStep::Failed { .. } => invariant_violation(&id, "executor called on step in failed state"),
+                SyncStep::Error { .. } =>  invariant_violation(&id, "executor called on step in error state")
             }
         }
+
+        // ASYNC
         Step::Async(_) => {
             unimplemented!("Async step execution not yet implemented")
         }
     }
+}
+
+fn invariant_violation(id: &str, message: &str) -> StepEvent {
+    error!("Executor invariant violation {} {}", id, message);
+    StepEvent::Error(id.to_string(), Some(message.to_string()))
 }

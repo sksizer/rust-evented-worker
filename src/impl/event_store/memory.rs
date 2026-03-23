@@ -20,8 +20,8 @@ impl EventSource for MemoryEventStore {
 
     fn save_step_event(&mut self, event: StepEvent) {
         let id = match &event {
-            StepEvent::AddSync(id, _) => id.clone(),
-            StepEvent::AddAsync(id, _) => id.clone(),
+            StepEvent::AddSync(id, _, _) => id.clone(),
+            StepEvent::AddAsync(id, _, _) => id.clone(),
             StepEvent::Start(id) => id.clone(),
             StepEvent::Complete(id, _) => id.clone(),
             StepEvent::Failed(id, _) => id.clone(),
@@ -45,7 +45,7 @@ mod tests {
     #[test]
     fn save_and_retrieve_events() {
         let mut store = MemoryEventStore::new();
-        store.save_step_event(StepEvent::AddSync("1".into(), "alpha".into()));
+        store.save_step_event(StepEvent::AddSync("1".into(), "alpha".into(), None));
         store.save_step_event(StepEvent::Complete("1".into(), Some("done".into())));
 
         let events = store.get_events_for("1");
@@ -55,8 +55,8 @@ mod tests {
     #[test]
     fn events_are_isolated_by_id() {
         let mut store = MemoryEventStore::new();
-        store.save_step_event(StepEvent::AddSync("1".into(), "alpha".into()));
-        store.save_step_event(StepEvent::AddSync("2".into(), "beta".into()));
+        store.save_step_event(StepEvent::AddSync("1".into(), "alpha".into(), None));
+        store.save_step_event(StepEvent::AddSync("2".into(), "beta".into(), None));
 
         assert_eq!(store.get_events_for("1").len(), 1);
         assert_eq!(store.get_events_for("2").len(), 1);

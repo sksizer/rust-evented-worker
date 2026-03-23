@@ -1,16 +1,18 @@
+use serde_json::Value;
+
 pub type StepKind = String;
 
 #[derive(Clone, Debug)]
 pub struct StepCore {
     pub id: String,
     pub kind: StepKind,
-    pub input: Option<String>,
+    pub input: Option<Value>,
 }
 
 #[derive(Clone, Debug)]
 pub enum SyncStep {
     Ready(StepCore),
-    Completed { core: StepCore, output: Option<String> },
+    Completed { core: StepCore, output: Option<Value> },
     Failed { core: StepCore, failure: Option<String> },
     Error { core: StepCore, failure: Option<String> },
 }
@@ -30,7 +32,7 @@ impl SyncStep {
 pub enum AsyncStep {
     Ready(StepCore),
     Running(StepCore),
-    Completed { core: StepCore, output: Option<String> },
+    Completed { core: StepCore, output: Option<Value> },
     Failed { core: StepCore, failure: Option<String> },
     Error { core: StepCore, failure: Option<String> },
 }

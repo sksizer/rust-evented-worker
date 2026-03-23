@@ -9,3 +9,4 @@ serde = { version = "1.0.228", features = ["derive"] }
 thiserror = "2.0.18"
 log = "0.4.29"
 colored = "3"
+serde_json = "1.0.149"

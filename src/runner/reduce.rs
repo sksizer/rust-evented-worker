@@ -6,7 +6,7 @@ use crate::execution_state::ExecutionState;
 /// Takes prior state + an event and returns an updated state
 pub fn reduce(execution_state: ExecutionState, step_event: &StepEvent) -> ExecutionState {
     match step_event {
-        StepEvent::AddSync(id, kind) => {
+        StepEvent::AddSync(id, kind, _input) => {
             execution_state::append_step_state(
                 execution_state,
                 Step::Sync(SyncStep::Ready(StepCore {
@@ -18,7 +18,7 @@ pub fn reduce(execution_state: ExecutionState, step_event: &StepEvent) -> Execut
             // TODO: propagate error instead of unwrap
             .unwrap()
         }
-        StepEvent::AddAsync(id, kind) => {
+        StepEvent::AddAsync(id, kind, _input ) => {
             execution_state::append_step_state(
                 execution_state,
                 Step::Async(AsyncStep::Ready(StepCore {

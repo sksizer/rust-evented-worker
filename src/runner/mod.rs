@@ -10,4 +10,3 @@ pub use scheduler::scheduler;
 pub use reduce::reduce;
 pub use restore::restore;
 pub use registry::Registry;
-pub use registry::SyncStepModule;

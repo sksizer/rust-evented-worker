@@ -43,7 +43,7 @@ pub fn execution_state(execution_state: &ExecutionState) {
         match step {
             Step::Sync(SyncStep::Completed { output: Some(output), .. })
             | Step::Async(AsyncStep::Completed { output: Some(output), .. }) => {
-                println!("      {} {}", "output:".dimmed(), output.green());
+                println!("      {} {}", "output:".dimmed(), serde_json::to_string_pretty(output).unwrap_or_default().green());
             }
             Step::Sync(SyncStep::Failed { failure: Some(failure), .. })
             | Step::Async(AsyncStep::Failed { failure: Some(failure), .. }) => {

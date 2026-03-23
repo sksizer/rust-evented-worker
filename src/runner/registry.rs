@@ -1,12 +1,15 @@
+use crate::api::steps::{AsyncStepModule, SyncStepModule};
 pub struct Registry {
     /// Step modules that handle synchronous operations
-    sync_definitions: Vec<SyncStepModule>
+    sync_definitions: Vec<SyncStepModule>,
+    async_definitions:Vec<AsyncStepModule>
 }
 
 impl Registry {
-    pub fn new(starting_modules: Option<Vec<SyncStepModule>>) -> Registry {
+    pub fn new(sync_step_modules: Option<Vec<SyncStepModule>>, async_step_modules:Option<Vec<AsyncStepModule>>) -> Registry {
         Registry {
-            sync_definitions: starting_modules.unwrap_or_else(Vec::new)
+            sync_definitions: sync_step_modules.unwrap_or_else(Vec::new),
+            async_definitions:async_step_modules.unwrap_or_else(Vec::new)
         }
     }
 
@@ -14,15 +17,8 @@ impl Registry {
         self.sync_definitions.push(step);
     }
 
-    pub fn get_sync_module(&self, name:&str) -> Option<&SyncStepModule> {
-        self.sync_definitions.iter().find(|s| s.name == name)
+    pub fn get_sync_module(&self, step_kind:&str) -> Option<&SyncStepModule> {
+        self.sync_definitions.iter().find(|s| s.id == step_kind)
     }
 }
 
-pub struct SyncStepModule {
-    /// Name for the step
-    pub name: String,
-    pub id: String,
-    pub description: String,
-    pub handler: fn() -> String,
-}
