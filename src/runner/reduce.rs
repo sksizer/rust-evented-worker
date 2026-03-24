@@ -1,6 +1,5 @@
 mod add_step;
 mod get_execution_status;
-mod complete_step;
 mod update_step;
 
 use serde_json::Value;

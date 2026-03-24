@@ -3,12 +3,6 @@ use crate::api::steps::StepEvent;
 
 pub type EventStream = Vec<StepEvent>;
 
-/// Interface to an event source
-pub trait EventSource {
-    fn get_events_for(&self, id: &str) -> EventStream;
-    fn save_step_event(&mut self, event: StepEvent);
-}
-
 
 #[cfg(test)]
 mod tests {

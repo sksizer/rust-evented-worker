@@ -1,3 +1,5 @@
+use std::rc::Rc;
+use std::cell::RefCell;
 use log::trace;
 use serde_json::json;
 use api::events::EventStream;
@@ -7,7 +9,6 @@ mod view;
 mod runner;
 mod fixtures;
 mod api;
-mod r#impl;
 
 use runner::Registry;
 use crate::api::execution::ExecutionState;
@@ -48,43 +49,30 @@ fn main() {
 
 fn example_one() {
     trace!("Example 1");
-    let event_stream: EventStream = vec![
+    let event_log = Rc::new(RefCell::new(vec![
         StepEvent::add_sync("0", "fixed_output", Some(json!({ "config": "DATA" }))),
         StepEvent::add_sync("1", "echo", None),
         StepEvent::add_sync("2", "echo", None),
-    ];
+    ]));
 
-    let mut controller = Controller::new(
-        get_registry(),
-        Some(event_stream),
-    );
+    let mut controller = Controller::new(get_registry(), event_log);
     let execution_state = controller.start();
     view::summarize::execution_state(&execution_state);
 }
 
 fn example_two() {
     trace!("Example 2");
-    let event_stream: EventStream = vec![
+    let event_log = Rc::new(RefCell::new(vec![
         StepEvent::add_sync("shell", "shell", Some(json!({ "commands" : ["ls"]}))),
         StepEvent::add_sync("echo", "echo", None),
-    ];
-    let result_event_stream = event_stream.clone();
-    let mut controller = Controller::new(
-        get_registry(),
-        Some(event_stream),
-    );
+    ]));
 
+    let mut controller = Controller::new(get_registry(), event_log.clone());
     controller.on_loop(|execution_state| {
         view::summarize::execution_state(&execution_state);
     });
 
-    let recorded_events = std::rc::Rc::new(std::cell::RefCell::new(result_event_stream));
-    let events_ref = recorded_events.clone();
-    controller.on_event(Box::new(move |event| {
-        events_ref.borrow_mut().push(event.clone());
-    }));
-
     let execution_state = controller.start();
     view::summarize::execution_state(&execution_state);
-    trace!("Recorded events: {:?}", recorded_events.borrow());
+    trace!("Recorded events: {:?}", event_log.borrow());
 }

@@ -32,11 +32,11 @@ mod tests {
     use serde_json::json;
 
     #[test]
-    fn passes_input_through_to_output() {
+    fn returns_config_as_output() {
         let module = get_fixed_output();
-        let input = json!({ "message": "hello" });
-        let output = (module.handler)(StepConfig(None), StepInput(Some(input.clone())));
-        assert_eq!(output.unwrap(), input);
+        let config = json!({ "message": "hello" });
+        let output = (module.handler)(StepConfig(Some(config.clone())), StepInput(None));
+        assert_eq!(output.unwrap(), config);
     }
 
     #[test]
