@@ -12,3 +12,4 @@ pub use reduce::reduce;
 pub use restore::restore;
 pub use registry::Registry;
 pub use controller::Controller;
+pub use controller::resolve_prior_output;

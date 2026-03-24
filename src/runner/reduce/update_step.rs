@@ -33,17 +33,17 @@ mod tests {
     use super::*;
 
     fn sync_core(id: &str) -> StepCore {
-        StepCore { id: id.to_string(), kind: "alpha".to_string(), input: None }
+        StepCore { id: id.to_string(), kind: "alpha".to_string(), config: None }
     }
     #[test]
     fn updating_finished_step_error() {
         let execution_state = DefaultExecutionState {
-            step_states: vec![Step::Sync(SyncStep::Completed { core: sync_core("1"), output: None })],
+            step_states: vec![Step::Sync(SyncStep::Completed { core: sync_core("1"), input: None, output: None })],
         };
 
         let result = update(
             execution_state,
-            Step::Sync(SyncStep::Ready(sync_core("1"))),
+            Step::Sync(SyncStep::Ready { core: sync_core("1"), input: None }),
         );
         assert!(result.is_err());
     }

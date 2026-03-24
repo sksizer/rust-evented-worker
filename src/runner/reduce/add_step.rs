@@ -31,11 +31,11 @@ mod tests {
     #[test]
     fn append_step_state_with_duplicate_id_error() {
         let execution_state = DefaultExecutionState {
-            step_states: vec![Step::Sync(crate::api::steps::SyncStep::Ready(crate::api::steps::StepCore { id: "1".to_string(), kind: "alpha".to_string(), input: None }))],
+            step_states: vec![Step::Sync(crate::api::steps::SyncStep::Ready { core: crate::api::steps::StepCore { id: "1".to_string(), kind: "alpha".to_string(), config: None }, input: None })],
         };
         let result = append_step_state(
             execution_state,
-            Step::Sync(crate::api::steps::SyncStep::Ready(crate::api::steps::StepCore { id: "1".to_string(), kind: "beta".to_string(), input: None })),
+            Step::Sync(crate::api::steps::SyncStep::Ready { core: crate::api::steps::StepCore { id: "1".to_string(), kind: "beta".to_string(), config: None }, input: None }),
         );
         assert!(result.is_err());
     }

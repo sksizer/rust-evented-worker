@@ -12,21 +12,20 @@ pub fn executor(registry: &Registry, step: &Step) -> StepEvent {
         // SYNC
         Step::Sync(s) => {
             match s {
-                SyncStep::Ready(core)=> {
+                SyncStep::Ready { core, input } => {
                     match registry.get_sync_module(&core.kind) {
                         Some(step_module) => {
-                            let input = s.core().input.clone();
-                            match (step_module.handler)(StepConfig(None), StepInput(input)) {
-                                Ok(value) => StepEvent::Complete(id, Some(value)),
-                                Err(errors) => StepEvent::Error(id, Some(errors.join("; "))),
+                            match (step_module.handler)(StepConfig(core.config.clone()), StepInput(input.clone())) {
+                                Ok(value) => StepEvent::complete(id, Some(value)),
+                                Err(errors) => StepEvent::error(id, Some(errors.join("; "))),
                             }
                         }
-                        None => return StepEvent::Error(id, Some(format!("No step handler registered for: {}", core.kind ))),
+                        None => StepEvent::error(id, Some(format!("No step handler registered for: {}", core.kind))),
                     }
-                },
-                SyncStep::Completed { .. } => invariant_violation(&id, "executor called on step in completed state" ) ,
+                }
+                SyncStep::Completed { .. } => invariant_violation(&id, "executor called on step in completed state"),
                 SyncStep::Failed { .. } => invariant_violation(&id, "executor called on step in failed state"),
-                SyncStep::Error { .. } =>  invariant_violation(&id, "executor called on step in error state")
+                SyncStep::Error { .. } => invariant_violation(&id, "executor called on step in error state"),
             }
         }
 
@@ -39,7 +38,7 @@ pub fn executor(registry: &Registry, step: &Step) -> StepEvent {
 
 fn invariant_violation(id: &str, message: &str) -> StepEvent {
     error!("Executor invariant violation {} {}", id, message);
-    StepEvent::Error(id.to_string(), Some(message.to_string()))
+    StepEvent::error(id.to_string(), Some(message.to_string()))
 }
 
 #[cfg(test)]

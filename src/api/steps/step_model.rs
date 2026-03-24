@@ -23,6 +23,17 @@ impl Step {
         &self.core().kind
     }
 
+    pub fn config(&self) -> Option<&Value> {
+        self.core().config.as_ref()
+    }
+
+    pub fn input(&self) -> Option<&Value> {
+        match self {
+            Step::Sync(s) => s.input(),
+            Step::Async(a) => a.input(),
+        }
+    }
+
     pub fn is_closed(&self) -> bool {
         match self {
             Step::Sync(s) => matches!(s, SyncStep::Completed { .. } | SyncStep::Failed { .. } | SyncStep::Error { .. }),
@@ -32,8 +43,8 @@ impl Step {
 
     pub fn is_runnable(&self) -> bool {
         match self {
-            Step::Sync(s) => matches!(s, SyncStep::Ready(_)),
-            Step::Async(a) => matches!(a, AsyncStep::Ready(_) | AsyncStep::Running(_)),
+            Step::Sync(s) => matches!(s, SyncStep::Ready { .. }),
+            Step::Async(a) => matches!(a, AsyncStep::Ready(_) | AsyncStep::Running { .. }),
         }
     }
 
@@ -53,19 +64,28 @@ impl Step {
 
 #[derive(Clone, Debug)]
 pub enum SyncStep {
-    Ready(StepCore),
-    Completed { core: StepCore, output: Option<Value> },
-    Failed { core: StepCore, failure: Option<String> },
-    Error { core: StepCore, failure: Option<String> },
+    Ready { core: StepCore, input: Option<Value> },
+    Completed { core: StepCore, input: Option<Value>, output: Option<Value> },
+    Failed { core: StepCore, input: Option<Value>, failure: Option<String> },
+    Error { core: StepCore, input: Option<Value>, failure: Option<String> },
 }
 
 impl SyncStep {
     pub fn core(&self) -> &StepCore {
         match self {
-            SyncStep::Ready(core) => core,
+            SyncStep::Ready { core, .. } => core,
             SyncStep::Completed { core, .. } => core,
             SyncStep::Failed { core, .. } => core,
             SyncStep::Error { core, .. } => core,
+        }
+    }
+
+    pub fn input(&self) -> Option<&Value> {
+        match self {
+            SyncStep::Ready { input, .. } => input.as_ref(),
+            SyncStep::Completed { input, .. } => input.as_ref(),
+            SyncStep::Failed { input, .. } => input.as_ref(),
+            SyncStep::Error { input, .. } => input.as_ref(),
         }
     }
 }
@@ -73,20 +93,30 @@ impl SyncStep {
 #[derive(Clone, Debug)]
 pub enum AsyncStep {
     Ready(StepCore),
-    Running(StepCore),
-    Completed { core: StepCore, output: Option<Value> },
-    Failed { core: StepCore, failure: Option<String> },
-    Error { core: StepCore, failure: Option<String> },
+    Running { core: StepCore, input: Option<Value> },
+    Completed { core: StepCore, input: Option<Value>, output: Option<Value> },
+    Failed { core: StepCore, input: Option<Value>, failure: Option<String> },
+    Error { core: StepCore, input: Option<Value>, failure: Option<String> },
 }
 
 impl AsyncStep {
     pub fn core(&self) -> &StepCore {
         match self {
             AsyncStep::Ready(core) => core,
-            AsyncStep::Running(core) => core,
+            AsyncStep::Running { core, .. } => core,
             AsyncStep::Completed { core, .. } => core,
             AsyncStep::Failed { core, .. } => core,
             AsyncStep::Error { core, .. } => core,
+        }
+    }
+
+    pub fn input(&self) -> Option<&Value> {
+        match self {
+            AsyncStep::Ready(_) => None,
+            AsyncStep::Running { input, .. } => input.as_ref(),
+            AsyncStep::Completed { input, .. } => input.as_ref(),
+            AsyncStep::Failed { input, .. } => input.as_ref(),
+            AsyncStep::Error { input, .. } => input.as_ref(),
         }
     }
 }

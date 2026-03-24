@@ -14,13 +14,13 @@ mod tests {
     use super::*;
     #[test]
     fn test_add_sync() {
-        let step_event = StepEvent::add_async("1", "echo", None);
-        assert_eq!(step_event, StepEvent::AddAsync("1".into(), "echo".into(), None));
+        let step_event = StepEvent::add_sync("1", "echo", None);
+        assert_eq!(step_event, StepEvent::add_sync("1", "echo", None));
     }
 
     #[test]
     fn test_add_async() {
         let step_event = StepEvent::add_async("1", "echo", None);
-        assert_eq!(step_event, StepEvent::AddAsync("1".into(), "echo".into(), None));
+        assert_eq!(step_event, StepEvent::add_async("1", "echo", None));
     }
 }

@@ -1,14 +1,17 @@
 //! Stateful object that ties together processing loop with functions
 
-use std::thread::sleep;
 use log::trace;
+use serde_json::Value;
 use crate::api::events::EventStream;
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
+use crate::api::steps::{AsyncStep, StepEvent, SyncStep};
+use crate::api::steps::Step;
 use crate::runner::{executor, reduce, restore, scheduler};
 use crate::runner::registry::Registry;
+
 pub struct Controller {
     registry: Registry,
-    event_stream: EventStream
+    event_stream: EventStream,
 }
 
 impl Controller {
@@ -20,39 +23,49 @@ impl Controller {
     }
 
     pub fn start(&self) -> DefaultExecutionState {
-        // Step 1. Restore Execution State
-        // - reduces an up-to-date execution state from the event stream
         let mut execution_state = restore(&self.event_stream);
 
-        // Step 2. Kick off processing from current state;
         while !execution_state.is_stopped() {
             trace!("Controller - processing");
-            // sleep(std::time::Duration::from_millis(1000))
-            let next_step = scheduler(&execution_state);
-            let event = executor(&self.registry, next_step.unwrap());
-            execution_state = reduce(execution_state, &event);
+            match scheduler(&execution_state) {
+                None => break,
+                Some(step) => {
+                    let input = resolve_prior_output(&execution_state, step.id());
+                    let start_event = StepEvent::start(step.id().to_string(), input);
+                    execution_state = reduce(execution_state, &start_event);
+
+                    let step = scheduler(&execution_state).unwrap();
+                    let event = executor(&self.registry, step);
+                    execution_state = reduce(execution_state, &event);
+                }
+            }
         }
         execution_state
     }
 }
 
+pub fn resolve_prior_output(execution_state: &DefaultExecutionState, step_id: &str) -> Option<Value> {
+    let pos = execution_state.step_states.iter().position(|s| s.id() == step_id)?;
+    if pos == 0 {
+        return None;
+    }
+    match &execution_state.step_states[pos - 1] {
+        Step::Sync(SyncStep::Completed { output, .. }) => output.clone(),
+        Step::Async(AsyncStep::Completed { output, .. }) => output.clone(),
+        _ => None,
+    }
+}
 
 #[cfg(test)]
 mod test {
     use serde_json::json;
     use crate::api::steps::StepEvent;
     use super::*;
+
     #[test]
     fn test_controller_start() {
         let event_stream = vec![
             StepEvent::add_sync("1", "echo", Some(json!({ "message": "hello" }))),
-            StepEvent::add_sync("1", "echo", None),
-            StepEvent::add_sync("1", "echo", None),
-            StepEvent::add_sync("1", "echo", None),
-            StepEvent::add_sync("1", "echo", None),
-            StepEvent::add_sync("1", "echo", None),
-            StepEvent::add_sync("1", "echo", None),
-            StepEvent::add_sync("1", "echo", None)
         ];
         let controller = Controller::new(Registry::new(None, None), None);
         controller.start();
