@@ -2,24 +2,15 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use log::trace;
 use serde_json::json;
-use api::events::EventStream;
-
-mod steps;
-mod view;
-mod runner;
-mod fixtures;
-mod api;
-
-use runner::Registry;
-use crate::api::execution::ExecutionState;
-use crate::api::steps::StepEvent;
-use crate::fixtures::get_registry;
-use crate::runner::{resolve_prior_output, Controller};
-
+use evented_worker::api::events::EventStream;
+use evented_worker::api::steps::StepEvent;
+use evented_worker::fixtures::{get_registry, get_test_step_modules};
+use evented_worker::runner::{resolve_prior_output, Controller, Registry};
+use evented_worker::{runner, view};
 
 fn main() {
     pretty_env_logger::init();
-    let registry = Registry::new(Some(fixtures::get_test_step_modules()), None);
+    let registry = Registry::new(Some(get_test_step_modules()), None);
     let event_stream: EventStream = vec![
         StepEvent::add_sync("1", "echo", Some(json!({ "config": "echo" }))),
     ];

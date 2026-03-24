@@ -34,6 +34,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "evented-worker"
+version = "0.1.0"
+dependencies = [
+ "colored",
+ "log",
+ "pretty_env_logger",
+ "serde",
+ "serde_json",
+ "thiserror",
+]
+
+[[package]]
 name = "hermit-abi"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -136,18 +148,6 @@ name = "regex-syntax"
 version = "0.8.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
-
-[[package]]
-name = "rust-event-sourced-state-machine"
-version = "0.1.0"
-dependencies = [
- "colored",
- "log",
- "pretty_env_logger",
- "serde",
- "serde_json",
- "thiserror",
-]
 
 [[package]]
 name = "serde"

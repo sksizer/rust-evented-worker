@@ -1,8 +1,8 @@
 [package]
-name = "rust-event-sourced-state-machine"
+name = "evented-worker"
 version = "0.1.0"
 edition = "2024"
-default-run = "rust-event-sourced-state-machine"
+default-run = "evented-worker"
 
 [dependencies]
 thiserror = "2.0.18"
