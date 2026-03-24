@@ -48,7 +48,8 @@ fn main() {
 fn example_one() {
     trace!("Example 1");
     let event_stream: EventStream = vec![
-        StepEvent::add_sync("1", "echo", Some(json!({ "config": "echo" }))),
+        StepEvent::add_sync("0", "fixed_output", Some(json!({ "config": "DATA" }))),
+        StepEvent::add_sync("1", "echo", None),
         StepEvent::add_sync("2", "echo", None),
         StepEvent::add_sync("3", "echo", None),
         StepEvent::add_sync("4", "echo", None),
