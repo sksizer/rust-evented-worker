@@ -17,8 +17,25 @@ fn main() {
                 ShellCommand::new("pnpm").args(vec![
                     "dlx",
                     "@anthropic-ai/claude-code",
+                    "--permission-mode",
+                    "acceptEdits",
                     "-p",
-                    "Please create a suitable README for this project",
+                    "Please create or update a suitable README for this project",
+                ])
+            ]
+        }),
+        get_step("1", StepParameters {
+            commands: vec![
+                ShellCommand::new("git").args(vec![
+                    "add",
+                    "README.md"
+                ])
+            ]
+        }),
+        get_step("2", StepParameters {
+            commands: vec![
+                ShellCommand::new("git_commit_message").args(vec![
+                    "-a"
                 ])
             ]
         })
