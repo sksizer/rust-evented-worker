@@ -1,6 +1,8 @@
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
 pub struct ShellCommand {
     pub program: String,
     pub args: Vec<String>,
@@ -10,12 +12,7 @@ pub struct ShellCommand {
 
 impl ShellCommand {
     pub fn new(program: impl Into<String>) -> Self {
-        Self {
-            program: program.into(),
-            args: vec![],
-            env: vec![],
-            working_dir: None,
-        }
+        Self { program: program.into(), args: vec![], env: vec![], working_dir: None }
     }
 
     pub fn arg(mut self, arg: impl Into<String>) -> Self {
@@ -71,15 +68,10 @@ impl From<&ShellCommand> for std::process::Command {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json;
 
     #[test]
     fn builder_sets_fields() {
-        let cmd = ShellCommand::new("cargo")
-            .arg("build")
-            .arg("--release")
-            .env("RUST_LOG", "debug")
-            .working_dir("/tmp");
+        let cmd = ShellCommand::new("cargo").arg("build").arg("--release").env("RUST_LOG", "debug").working_dir("/tmp");
 
         assert_eq!(cmd.program, "cargo");
         assert_eq!(cmd.args, vec!["build", "--release"]);
@@ -93,6 +85,7 @@ mod tests {
         assert_eq!(cmd.args, vec!["hello", "world"]);
     }
 
+    #[cfg(feature = "serde")]
     #[test]
     fn roundtrip_json() {
         let cmd = ShellCommand::new("ls").arg("-la").working_dir("/home");
@@ -106,6 +99,15 @@ mod tests {
         let cmd = ShellCommand::new("echo").arg("hi");
         let mut proc_cmd = std::process::Command::from(&cmd);
         let output = proc_cmd.output().unwrap();
+        assert!(output.status.success());
+    }
+
+    #[cfg(feature = "tokio")]
+    #[tokio::test]
+    async fn into_tokio_command() {
+        let cmd = ShellCommand::new("echo").arg("hi");
+        let mut tokio_cmd = tokio::process::Command::from(&cmd);
+        let output = tokio_cmd.output().await.unwrap();
         assert!(output.status.success());
     }
 }

@@ -1,0 +1,6 @@
+# directories
+target/
+
+# files
+**/*.rs.bk
+.idea
