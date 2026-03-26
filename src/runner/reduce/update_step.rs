@@ -1,5 +1,5 @@
 use crate::api::execution::{DefaultExecutionState, ExecutionState, ExecutionStateError};
-use crate::api::steps::{Step, SyncStep};
+use crate::api::steps::Step;
 use log::error;
 
 pub(super) fn update(
@@ -34,7 +34,8 @@ pub(super) fn update(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::steps::StepCore;
+    use crate::api::steps::{StepCore, SyncCompleted, SyncNew, SyncStep, CompletedStep, RanStep};
+    use chrono::Utc;
 
     fn sync_core(id: &str) -> StepCore {
         StepCore {
@@ -45,20 +46,21 @@ mod tests {
     }
     #[test]
     fn updating_finished_step_error() {
-        let execution_state = DefaultExecutionState {
-            step_states: vec![Step::Sync(SyncStep::Completed {
-                core: sync_core("1"),
-                input: None,
+        let completed = SyncCompleted {
+            core: sync_core("1"),
+            completed: CompletedStep {
+                ran: RanStep { started_at: Utc::now(), input: None },
                 output: None,
-            })],
+            },
+        };
+        let execution_state = DefaultExecutionState {
+            step_states: vec![Step::from(SyncStep::from(completed))],
         };
 
+        let ready = SyncNew::new(sync_core("1")).make_ready(None);
         let result = update(
             execution_state,
-            Step::Sync(SyncStep::Ready {
-                core: sync_core("1"),
-                input: None,
-            }),
+            Step::from(SyncStep::from(ready)),
         );
         assert!(result.is_err());
     }

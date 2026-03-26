@@ -14,8 +14,8 @@ pub fn resolve_prior_output(
         return None;
     }
     match &execution_state.step_states[pos - 1] {
-        Step::Sync(SyncStep::Completed { output, .. }) => output.clone(),
-        Step::Async(AsyncStep::Completed { output, .. }) => output.clone(),
+        Step::Sync(SyncStep::Completed(sc)) => sc.completed.output.clone(),
+        Step::Async(AsyncStep::Completed(ac)) => ac.completed.output.clone(),
         _ => None,
     }
 }

@@ -15,8 +15,7 @@ pub fn restore(event_stream: &EventStream) -> DefaultExecutionState {
 mod test {
     use super::*;
     use crate::api::execution::{ExecutionState, ExecutionStatus};
-    use crate::api::steps::Step;
-    use crate::api::steps::{AsyncStep, StepEvent, SyncStep};
+    use crate::api::steps::{AsyncStep, Step, StepEvent, SyncStep};
 
     #[test]
     fn test_adding_a_single_step() {
@@ -41,14 +40,14 @@ mod test {
     fn single_step_progression() {
         let event_stream = vec![
             StepEvent::add_sync("1", "alpha", None),
-            StepEvent::start("1".to_string(), None),
-            StepEvent::complete("1".to_string(), None),
+            StepEvent::start("1"),
+            StepEvent::complete("1", None),
         ];
         let execution_state = restore(&event_stream);
         assert_eq!(execution_state.step_states.len(), 1);
         assert!(matches!(
             execution_state.step_states[0],
-            Step::Sync(SyncStep::Completed { .. })
+            Step::Sync(SyncStep::Completed(_))
         ));
         assert_eq!(execution_state.step_states[0].id(), "1");
     }
@@ -57,21 +56,21 @@ mod test {
     fn two_step_progression() {
         let event_stream = vec![
             StepEvent::add_sync("1", "alpha", None),
-            StepEvent::start("1".to_string(), None),
-            StepEvent::complete("1".to_string(), None),
+            StepEvent::start("1"),
+            StepEvent::complete("1", None),
             StepEvent::add_sync("2", "beta", None),
-            StepEvent::start("2".to_string(), None),
-            StepEvent::complete("2".to_string(), None),
+            StepEvent::start("2"),
+            StepEvent::complete("2", None),
         ];
         let execution_state = restore(&event_stream);
         assert_eq!(execution_state.step_states.len(), 2);
         assert!(matches!(
             execution_state.step_states[0],
-            Step::Sync(SyncStep::Completed { .. })
+            Step::Sync(SyncStep::Completed(_))
         ));
         assert!(matches!(
             execution_state.step_states[1],
-            Step::Sync(SyncStep::Completed { .. })
+            Step::Sync(SyncStep::Completed(_))
         ));
     }
 
@@ -79,28 +78,28 @@ mod test {
     fn three_step_failure() {
         let event_stream = vec![
             StepEvent::add_sync("1", "alpha", None),
-            StepEvent::start("1".to_string(), None),
-            StepEvent::complete("1".to_string(), None),
+            StepEvent::start("1"),
+            StepEvent::complete("1", None),
             StepEvent::add_sync("2", "beta", None),
-            StepEvent::start("2".to_string(), None),
-            StepEvent::complete("2".to_string(), None),
+            StepEvent::start("2"),
+            StepEvent::complete("2", None),
             StepEvent::add_sync("3", "gamma", None),
-            StepEvent::start("3".to_string(), None),
-            StepEvent::failed("3".to_string(), Some("something went wrong".into())),
+            StepEvent::start("3"),
+            StepEvent::failed("3", Some("something went wrong".into())),
         ];
         let execution_state = restore(&event_stream);
         assert_eq!(execution_state.step_states.len(), 3);
         assert!(matches!(
             execution_state.step_states[0],
-            Step::Sync(SyncStep::Completed { .. })
+            Step::Sync(SyncStep::Completed(_))
         ));
         assert!(matches!(
             execution_state.step_states[1],
-            Step::Sync(SyncStep::Completed { .. })
+            Step::Sync(SyncStep::Completed(_))
         ));
         assert!(matches!(
             execution_state.step_states[2],
-            Step::Sync(SyncStep::Failed { .. })
+            Step::Sync(SyncStep::Failed(_))
         ));
 
         assert_eq!(execution_state.status(), ExecutionStatus::Failed);
@@ -109,14 +108,14 @@ mod test {
     #[test]
     fn async_step_start_running() {
         let event_stream = vec![
-            StepEvent::add_async("1".to_string(), "fetch".to_string(), None),
-            StepEvent::start("1".to_string(), None),
+            StepEvent::add_async("1", "fetch", None),
+            StepEvent::start("1"),
         ];
         let execution_state = restore(&event_stream);
         assert_eq!(execution_state.step_states.len(), 1);
         assert!(matches!(
             execution_state.step_states[0],
-            Step::Async(AsyncStep::Running { .. })
+            Step::Async(AsyncStep::Running(_))
         ));
     }
 }

@@ -3,9 +3,9 @@ mod get_execution_status;
 mod update_step;
 
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
-use crate::api::steps::Step;
-use crate::api::steps::{AsyncStep, StepCore, StepEvent, SyncStep};
-use serde_json::Value;
+use crate::api::steps::{
+    AsyncStep, AsyncReady, Step, StepCore, StepEvent, SyncNew, SyncStep,
+};
 
 use add_step::append_step_state;
 pub use get_execution_status::get_execution_status;
@@ -18,152 +18,76 @@ pub fn reduce(
 ) -> DefaultExecutionState {
     match step_event {
         StepEvent::AddSync(payload) => {
-            // TODO - this probably doesn't make sense to just transition a step from New to Ready in the reducer for no other reason than being in the new state
-            // READY should probably mean that all the data is present for a step - which in many cases is going to mean that it's dependencies and prior steps are also ready and have data prepped
-            append_step_state(
-                execution_state,
-                Step::Sync(SyncStep::Ready {
-                    core: StepCore {
-                        id: payload.id.clone(),
-                        kind: payload.kind.clone(),
-                        config: payload.config.clone(),
-                    },
-                    input: None,
-                }),
-            )
-            // TODO: propagate error instead of unwrap
-            .unwrap()
-        }
-        StepEvent::AddAsync(payload) => append_step_state(
-            execution_state,
-            Step::Async(AsyncStep::Ready(StepCore {
+            let core = StepCore {
                 id: payload.id.clone(),
                 kind: payload.kind.clone(),
                 config: payload.config.clone(),
-            })),
-        )
-        .unwrap(),
-        StepEvent::Start(id, input) => {
-            let core = get_step_core(&execution_state, id);
-            let is_async = matches!(execution_state.get_step_state(id).unwrap(), Step::Async(_));
-            if is_async {
-                update(
-                    execution_state,
-                    Step::Async(AsyncStep::Running {
-                        core,
-                        input: input.clone(),
-                    }),
-                )
-            } else {
-                update(
-                    execution_state,
-                    Step::Sync(SyncStep::Ready {
-                        core,
-                        input: input.clone(),
-                    }),
-                )
-            }
-            .unwrap()
+            };
+            let step = Step::from(SyncStep::from(SyncNew::new(core).make_ready(None)));
+            append_step_state(execution_state, step).unwrap()
+        }
+        StepEvent::AddAsync(payload) => {
+            let core = StepCore {
+                id: payload.id.clone(),
+                kind: payload.kind.clone(),
+                config: payload.config.clone(),
+            };
+            let step = Step::from(AsyncStep::from(AsyncReady::new(core)));
+            append_step_state(execution_state, step).unwrap()
+        }
+        StepEvent::Start(id) => {
+            let new_step = match execution_state.get_step_state(id) {
+                Some(Step::Sync(SyncStep::Ready(ready))) => {
+                    Step::from(SyncStep::from(ready.clone().start()))
+                }
+                Some(Step::Async(AsyncStep::Ready(ready))) => {
+                    Step::from(AsyncStep::from(ready.clone().start(None)))
+                }
+                _ => panic!("Invalid step state for Start event: {}", id),
+            };
+            update(execution_state, new_step).unwrap()
         }
         StepEvent::Complete(payload) => {
-            let core = get_step_core(&execution_state, &payload.id);
-            let input = get_step_input(&execution_state, &payload.id);
-            match execution_state.get_step_state(&payload.id) {
-                Some(step) => if matches!(step, Step::Async(_)) {
-                    update(
-                        execution_state,
-                        Step::Async(AsyncStep::Completed {
-                            core,
-                            input,
-                            output: payload.output.clone(),
-                        }),
-                    )
-                } else {
-                    update(
-                        execution_state,
-                        Step::Sync(SyncStep::Completed {
-                            core,
-                            input,
-                            output: payload.output.clone(),
-                        }),
-                    )
+            let new_step = match execution_state.get_step_state(&payload.id) {
+                Some(Step::Sync(SyncStep::Running(running))) => {
+                    Step::from(SyncStep::from(running.clone().complete(payload.output.clone())))
                 }
-                .unwrap(),
-                None => panic!("Step not found in execution state"),
-            }
+                Some(Step::Async(AsyncStep::Running(running))) => {
+                    Step::from(AsyncStep::from(running.clone().complete(payload.output.clone())))
+                }
+                _ => panic!("Invalid step state for Complete event: {}", payload.id),
+            };
+            update(execution_state, new_step).unwrap()
         }
         StepEvent::Failed(payload) => {
-            let core = get_step_core(&execution_state, &payload.id);
-            let input = get_step_input(&execution_state, &payload.id);
-            match execution_state.get_step_state(&payload.id) {
-                Some(step) => if matches!(step, Step::Async(_)) {
-                    update(
-                        execution_state,
-                        Step::Async(AsyncStep::Failed {
-                            core,
-                            input,
-                            failure: payload.reason.clone(),
-                        }),
-                    )
-                } else {
-                    update(
-                        execution_state,
-                        Step::Sync(SyncStep::Failed {
-                            core,
-                            input,
-                            failure: payload.reason.clone(),
-                        }),
-                    )
+            let failure = payload.reason.as_ref().map(|r| vec![r.clone()]);
+            let new_step = match execution_state.get_step_state(&payload.id) {
+                Some(Step::Sync(SyncStep::Running(running))) => {
+                    Step::from(SyncStep::from(running.clone().fail(failure)))
                 }
-                .unwrap(),
-                None => panic!("Step not found in execution state"),
-            }
+                Some(Step::Async(AsyncStep::Running(running))) => {
+                    Step::from(AsyncStep::from(running.clone().fail(failure)))
+                }
+                _ => panic!("Invalid step state for Failed event: {}", payload.id),
+            };
+            update(execution_state, new_step).unwrap()
         }
         StepEvent::Error(payload) => {
-            let core = get_step_core(&execution_state, &payload.id);
-            let input = get_step_input(&execution_state, &payload.id);
-            match execution_state.get_step_state(&payload.id) {
-                Some(step) => if matches!(step, Step::Async(_)) {
-                    update(
-                        execution_state,
-                        Step::Async(AsyncStep::Error {
-                            core,
-                            input,
-                            failure: payload.reason.clone(),
-                        }),
-                    )
-                } else {
-                    update(
-                        execution_state,
-                        Step::Sync(SyncStep::Error {
-                            core,
-                            input,
-                            failure: payload.reason.clone(),
-                        }),
-                    )
+            let failure = payload.reason.as_ref().map(|r| vec![r.clone()]);
+            let new_step = match execution_state.get_step_state(&payload.id) {
+                Some(Step::Sync(SyncStep::Running(running))) => {
+                    Step::from(SyncStep::from(running.clone().error(failure)))
                 }
-                .unwrap(),
-                None => panic!("Step not found in execution state"),
-            }
+                Some(Step::Async(AsyncStep::Running(running))) => {
+                    Step::from(AsyncStep::from(running.clone().error(failure)))
+                }
+                _ => panic!("Invalid step state for Error event: {}", payload.id),
+            };
+            update(execution_state, new_step).unwrap()
+        }
+        StepEvent::SystemError(payload) => {
+            // TODO - consider this system error whether it even makes sense to have it
+            execution_state
         }
     }
-}
-
-fn get_step_core(execution_state: &DefaultExecutionState, id: &str) -> StepCore {
-    execution_state
-        .step_states
-        .iter()
-        .find(|s| s.id() == id)
-        .unwrap_or_else(|| panic!("Step {} not found in execution state", id))
-        .core()
-        .clone()
-}
-
-fn get_step_input(execution_state: &DefaultExecutionState, id: &str) -> Option<Value> {
-    execution_state
-        .step_states
-        .iter()
-        .find(|s| s.id() == id)
-        .and_then(|s| s.input())
-        .cloned()
 }

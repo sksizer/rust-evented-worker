@@ -1,5 +1,5 @@
 mod controller;
-mod executor;
+mod processor;
 mod reduce;
 mod registry;
 mod restore;
@@ -7,7 +7,7 @@ mod scheduler;
 
 pub use controller::Controller;
 pub use controller::resolve_prior_output;
-pub use executor::executor;
+pub use processor::process;
 pub use reduce::get_execution_status;
 pub use reduce::reduce;
 pub use registry::Registry;

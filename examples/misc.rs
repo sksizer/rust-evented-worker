@@ -2,7 +2,7 @@ use evented_worker::api::events::EventStream;
 use evented_worker::api::steps::StepEvent;
 use evented_worker::fixtures::get_registry;
 use evented_worker::fixtures::get_test_step_modules;
-use evented_worker::runner::{resolve_prior_output, Controller};
+use evented_worker::runner::Controller;
 use evented_worker::runner::Registry;
 use evented_worker::steps::shell::{StepParameters, get_step};
 use evented_worker::{runner, view};
@@ -23,26 +23,18 @@ fn main() {
     let mut execution_state = runner::restore(&event_stream);
     view::summarize::execution_state(&execution_state);
 
-    let step_id = runner::scheduler(&execution_state)
-        .unwrap()
-        .id()
-        .to_string();
-    let input = resolve_prior_output(&execution_state, &step_id);
-    execution_state = runner::reduce(execution_state, &StepEvent::start(step_id, input));
-    let next_step = runner::scheduler(&execution_state).unwrap();
-    let result_event = runner::executor(&registry, next_step);
+    // Step 1: schedule (produces a Start event), reduce it, then process and reduce the result
+    let start_event = runner::scheduler(&execution_state).unwrap();
+    execution_state = runner::reduce(execution_state, &start_event);
+    let result_event = runner::process(&execution_state, &registry, &start_event);
     execution_state = runner::reduce(execution_state, &result_event);
     view::summarize::execution_state(&execution_state);
 
+    // Step 2
     execution_state = runner::reduce(execution_state, &StepEvent::add_sync("2", "echo", None));
-    let step_id = runner::scheduler(&execution_state)
-        .unwrap()
-        .id()
-        .to_string();
-    let input = resolve_prior_output(&execution_state, &step_id);
-    execution_state = runner::reduce(execution_state, &StepEvent::start(step_id, input));
-    let next_step = runner::scheduler(&execution_state).unwrap();
-    let result_event = runner::executor(&registry, next_step);
+    let start_event = runner::scheduler(&execution_state).unwrap();
+    execution_state = runner::reduce(execution_state, &start_event);
+    let result_event = runner::process(&execution_state, &registry, &start_event);
     execution_state = runner::reduce(execution_state, &result_event);
     view::summarize::execution_state(&execution_state);
 
@@ -76,10 +68,6 @@ fn example_two() {
     ]));
 
     let mut controller = Controller::new(get_registry(), event_log.clone());
-    controller.on_loop(|execution_state| {
-        view::summarize::execution_state(&execution_state);
-    });
-
     let execution_state = controller.start();
     view::summarize::execution_state(&execution_state);
     trace!("Recorded events: {:?}", event_log.borrow());

@@ -27,29 +27,25 @@ pub fn append_step_state(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::api::steps::{AsyncStep, SyncStep};
+    use crate::api::steps::{StepCore, SyncNew, SyncStep};
+
+    fn make_ready_step(id: &str, kind: &str) -> Step {
+        let core = StepCore {
+            id: id.to_string(),
+            kind: kind.to_string(),
+            config: None,
+        };
+        Step::from(SyncStep::from(SyncNew::new(core).make_ready(None)))
+    }
+
     #[test]
     fn append_step_state_with_duplicate_id_error() {
         let execution_state = DefaultExecutionState {
-            step_states: vec![Step::Sync(crate::api::steps::SyncStep::Ready {
-                core: crate::api::steps::StepCore {
-                    id: "1".to_string(),
-                    kind: "alpha".to_string(),
-                    config: None,
-                },
-                input: None,
-            })],
+            step_states: vec![make_ready_step("1", "alpha")],
         };
         let result = append_step_state(
             execution_state,
-            Step::Sync(crate::api::steps::SyncStep::Ready {
-                core: crate::api::steps::StepCore {
-                    id: "1".to_string(),
-                    kind: "beta".to_string(),
-                    config: None,
-                },
-                input: None,
-            }),
+            make_ready_step("1", "beta"),
         );
         assert!(result.is_err());
     }

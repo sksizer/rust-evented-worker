@@ -20,15 +20,26 @@ pub struct FailurePayload {
     pub reason: Option<String>,
 }
 
+#[derive(Clone, Eq, PartialEq, Debug)]
+pub struct SystemErrorData {
+    pub step_id: StepId,
+    pub source: String,
+    pub errors: Vec<String>
+}
+
 // An event indicates when something HAS happened — and should result in some state change
+
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub enum StepEvent {
     AddSync(AddStepPayload),
     AddAsync(AddStepPayload),
-    Start(StepId, Option<Value>),
+    Start(StepId),
+
     Complete(CompletePayload),
     Failed(FailurePayload),
     Error(FailurePayload),
+
+    SystemError(SystemErrorData)
 }
 
 impl StepEvent {
@@ -52,8 +63,8 @@ impl StepEvent {
         })
     }
 
-    pub fn start(id: impl Into<String>, input: Option<Value>) -> Self {
-        StepEvent::Start(id.into(), input)
+    pub fn start(id: impl Into<String>) -> Self {
+        StepEvent::Start(id.into())
     }
 
     pub fn complete(id: impl Into<String>, output: Option<Value>) -> Self {
@@ -83,10 +94,11 @@ impl StepEvent {
         match self {
             StepEvent::AddSync(p) => &p.id,
             StepEvent::AddAsync(p) => &p.id,
-            StepEvent::Start(id, _) => id,
+            StepEvent::Start(id) => id,
             StepEvent::Complete(p) => &p.id,
             StepEvent::Failed(p) => &p.id,
             StepEvent::Error(p) => &p.id,
+            StepEvent::SystemError(p) => &p.step_id
         }
     }
 }
