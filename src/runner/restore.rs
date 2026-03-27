@@ -1,5 +1,5 @@
 //! Creates a realized execution state from an event stream
-use crate::api::events::EventStream;
+use crate::api::events::{Event, EventStream};
 use crate::api::execution::DefaultExecutionState;
 use crate::runner::reduce::reduce;
 
@@ -15,7 +15,8 @@ pub fn restore(event_stream: &EventStream) -> DefaultExecutionState {
 mod test {
     use super::*;
     use crate::api::execution::{ExecutionState, ExecutionStatus};
-    use crate::api::steps::{AsyncStep, Event, Step, SyncStep};
+    use crate::api::events::Event;
+    use crate::api::steps::{AsyncStep, Step, SyncStep};
 
     #[test]
     fn test_adding_a_single_step() {

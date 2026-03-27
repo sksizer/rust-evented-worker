@@ -1,4 +1,4 @@
-use evented_worker::api::steps::Event;
+use evented_worker::api::events::Event;
 use evented_worker::fixtures::get_registry;
 use evented_worker::runner::Controller;
 use evented_worker::view;

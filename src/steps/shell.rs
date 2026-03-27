@@ -1,4 +1,5 @@
-use crate::api::steps::{StepConfig, StepError, Event, StepInput, SyncStepHandler};
+use crate::api::events::Event;
+use crate::api::steps::{StepConfig, StepError, StepInput, SyncStepHandler};
 use log::trace;
 use serde::Deserialize;
 use serde_command::ShellCommand;

@@ -2,9 +2,10 @@ mod add_step;
 mod get_execution_status;
 mod update_step;
 
+use crate::api::events::Event;
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
 use crate::api::steps::{
-    AsyncStep, AsyncReady, Event, Step, StepCore, StepEvent, SyncNew, SyncStep,
+    AsyncStep, AsyncReady, Step, StepCore, StepEvent, SyncNew, SyncStep,
 };
 
 use add_step::append_step_state;

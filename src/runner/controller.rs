@@ -2,9 +2,8 @@
 
 mod get_prior_output;
 
-use crate::api::events::EventStream;
+use crate::api::events::{Event, EventStream};
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
-use crate::api::steps::Event;
 use crate::runner::registry::Registry;
 use crate::runner::{process, reduce, restore, scheduler};
 pub use get_prior_output::resolve_prior_output;
@@ -50,7 +49,7 @@ type EventHandlerFn = Box<dyn FnMut(&Event)>;
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::api::steps::Event;
+    use crate::api::events::Event;
     use crate::runner::registry::Registry;
     use serde_json::json;
     use std::cell::RefCell;

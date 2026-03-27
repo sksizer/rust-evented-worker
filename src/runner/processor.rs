@@ -1,6 +1,6 @@
 //! Solely responsible for calling a step function
-use crate::api::steps::{Event, StepEvent, SystemErrorData};
-use crate::api::steps::{StepConfig, StepInput};
+use crate::api::events::{Event, SystemErrorData};
+use crate::api::steps::{StepConfig, StepEvent, StepInput};
 use crate::runner::registry::Registry;
 use log::{error, trace};
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
