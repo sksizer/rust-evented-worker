@@ -16,7 +16,7 @@ State is never stored directly. It is always derived by replaying the event stre
 
 ```
 evented-worker/          # Main library crate
-crates/serde-command/    # Serializable shell command builder
+crates/cmd-spec/    # Serializable shell command builder
 ```
 
 ## Quick Start
@@ -29,7 +29,7 @@ Define an event log with your steps, hand it to a `Controller`, and call `start(
 use evented_worker::runner::Controller;
 use evented_worker::fixtures::get_registry;
 use evented_worker::steps::shell::{StepParameters, get_step};
-use serde_command::ShellCommand;
+use cmd_spec::ShellCommand;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -118,12 +118,12 @@ DefaultExecutionState
 
 Recovery works by replaying the event stream from the beginning. If a process crashes mid-execution, replaying the existing events restores exact state — already-completed steps are not re-executed.
 
-## serde-command
+## cmd_spec
 
 A serializable wrapper for `std::process::Command`, useful when step configurations need to be stored in the event log as JSON:
 
 ```rust
-use serde_command::ShellCommand;
+use cmd_spec::ShellCommand;
 
 let cmd = ShellCommand::new("cargo")
     .arg("build")
@@ -139,7 +139,7 @@ Enable the `tokio` feature for async execution via `tokio::process::Command`:
 
 ```toml
 [dependencies]
-serde-command = { path = "crates/serde-command", features = ["tokio"] }
+cmd-spec = { path = "crates/cmd-spec", features = ["tokio"] }
 ```
 
 ## Built-in Step Handlers

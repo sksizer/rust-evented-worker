@@ -7,7 +7,7 @@ use serde_json::json;
 use std::cell::RefCell;
 use std::rc::Rc;
 use evented_worker::steps::shell::{get_step, StepParameters};
-use serde_command::ShellCommand;
+use cmd_spec::ShellCommand;
 
 fn main() {
     trace!("Example 3: Update Readme");
