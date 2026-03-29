@@ -1,16 +1,16 @@
-use super::errors::StepError;
+use super::errors::ActivityError;
 use serde_json::Value;
 use std::pin::Pin;
 
-pub struct StepConfig(pub Option<Value>);
-pub struct StepInput(pub Option<Value>);
+pub struct ActivityConfig(pub Option<Value>);
+pub struct ActivityInput(pub Option<Value>);
 
-pub type ValidateConfig = fn(Option<Value>) -> Result<(), StepError>;
+pub type ValidateConfig = fn(Option<Value>) -> Result<(), ActivityError>;
 pub type ValidateInput = fn(Option<Value>) -> Result<(), String>;
 
-type SyncHandler = fn(StepConfig, StepInput) -> Result<Value, Vec<String>>;
+type SyncHandler = fn(ActivityConfig, ActivityInput) -> Result<Value, Vec<String>>;
 
-pub struct SyncStepHandler {
+pub struct SyncActivityHandler {
     pub name: String,
     pub id: String,
     pub description: String,
@@ -21,11 +21,11 @@ pub struct SyncStepHandler {
 
 type AsyncHandler =
     fn(
-        StepConfig,
-        StepInput,
+        ActivityConfig,
+        ActivityInput,
     ) -> Pin<Box<dyn std::future::Future<Output = Result<Value, Vec<String>>> + Send>>;
 
-pub struct AsyncStepHandler {
+pub struct AsyncActivityHandler {
     pub name: String,
     pub id: String,
     pub description: String,

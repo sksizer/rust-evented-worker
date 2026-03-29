@@ -1,11 +1,11 @@
 # Durability
 
 ## Recovery
-In order to truly be able to recover from an interrupted processing, 
+In order to truly be able to recover from an interrupted processing,
 we need to be able to replay events - but we also have to verify the
-side effects of those events. 
+side effects of those events.
 
-This probably involves adding an API to the registry for Event Kinds 
+This probably involves adding an API to the registry for Event Kinds
 
 
 ## Glossary
@@ -13,14 +13,13 @@ This probably involves adding an API to the registry for Event Kinds
 unimplemented. Would indicate intention to change system state
 
 *event*
-TODO: something that has happened in the system. Indicates a change in 
+TODO: something that has happened in the system. Indicates a change in
 system state
 
 
-*step*
+*activity*
 a function that takes an event and produces a new event
 
-*step kind*
-a discriminator for the functional type of the step. Eg. `create-worktree`,
+*activity kind*
+a discriminator for the functional type of the activity. Eg. `create-worktree`,
 `create-commit`, `create-tag`
-

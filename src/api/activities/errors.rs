@@ -1,7 +1,7 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-pub enum StepError {
+pub enum ActivityError {
     #[error("Invalid Configuration: {0}")]
     InvalidConfig(String),
 

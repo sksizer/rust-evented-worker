@@ -1,4 +1,4 @@
-use crate::api::steps::Step;
+use crate::api::activities::Activity;
 use crate::runner::get_execution_status;
 use thiserror::Error;
 
@@ -7,18 +7,18 @@ pub trait ExecutionState {
     fn status(&self) -> ExecutionStatus;
     fn is_stopped(&self) -> bool;
 
-    fn get_step_state(&self, id: &str) -> Option<&Step>;
+    fn get_activity_state(&self, id: &str) -> Option<&Activity>;
 }
 
 pub struct DefaultExecutionState {
     // todo - make this private to enforce valid transitions
-    pub step_states: Vec<Step>,
+    pub activity_states: Vec<Activity>,
 }
 
 impl ExecutionState for DefaultExecutionState {
     fn new() -> DefaultExecutionState {
         DefaultExecutionState {
-            step_states: vec![],
+            activity_states: vec![],
         }
     }
     fn status(&self) -> ExecutionStatus {
@@ -32,29 +32,29 @@ impl ExecutionState for DefaultExecutionState {
         )
     }
 
-    fn get_step_state(&self, id: &str) -> Option<&Step> {
-        self.step_states.iter().find(|s| s.id() == id)
+    fn get_activity_state(&self, id: &str) -> Option<&Activity> {
+        self.activity_states.iter().find(|s| s.id() == id)
     }
 }
 
 #[derive(Error, Debug)]
 pub enum ExecutionStateError {
-    #[error("Attempt to step transition on closed execution state")]
+    #[error("Attempt to transition on closed execution state")]
     TransitionOnClosedExecutionState,
 
-    #[error("A step with a duplicate id was appended")]
-    DuplicateStepIdError,
+    #[error("An activity with a duplicate id was appended")]
+    DuplicateActivityIdError,
 
-    #[error("Invalid step transition")]
-    InvalidStepTransition,
+    #[error("Invalid activity transition")]
+    InvalidActivityTransition,
 
-    #[error("Invalid step transition on closed step")]
-    InvalidStepTransitionOnClosedStep,
+    #[error("Invalid activity transition on closed activity")]
+    InvalidActivityTransitionOnClosedActivity,
 }
 
 #[derive(Debug, PartialEq)]
 pub enum ExecutionStatus {
-    New, // No steps established or any other state
+    New, // No activities established or any other state
     Error,
     Failed,
     Running,

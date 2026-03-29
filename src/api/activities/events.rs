@@ -1,42 +1,42 @@
-use crate::api::steps::{StepId, StepKind};
+use crate::api::activities::{ActivityId, ActivityKind};
 use serde_json::Value;
 
 // --- Payloads ---
 
 #[derive(Clone, Eq, PartialEq, Debug)]
-pub struct AddStepPayload {
-    pub id: StepId,
-    pub kind: StepKind,
+pub struct AddActivityPayload {
+    pub id: ActivityId,
+    pub kind: ActivityKind,
     pub config: Option<Value>,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct CompletePayload {
-    pub id: StepId,
+    pub id: ActivityId,
     pub output: Option<Value>,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub struct FailurePayload {
-    pub id: StepId,
+    pub id: ActivityId,
     pub reason: Option<String>,
 }
 
-// --- Step events ---
+// --- Activity events ---
 
 #[derive(Clone, Eq, PartialEq, Debug)]
-pub enum StepEvent {
-    AddSync(AddStepPayload),
-    AddAsync(AddStepPayload),
-    Start(StepId),
+pub enum ActivityEvent {
+    AddSync(AddActivityPayload),
+    AddAsync(AddActivityPayload),
+    Start(ActivityId),
     Complete(CompletePayload),
     Failed(FailurePayload),
     Error(FailurePayload),
 }
 
-impl StepEvent {
+impl ActivityEvent {
     pub fn add_sync(id: impl Into<String>, kind: impl Into<String>, config: Option<Value>) -> Self {
-        StepEvent::AddSync(AddStepPayload {
+        ActivityEvent::AddSync(AddActivityPayload {
             id: id.into(),
             kind: kind.into(),
             config,
@@ -48,7 +48,7 @@ impl StepEvent {
         kind: impl Into<String>,
         config: Option<Value>,
     ) -> Self {
-        StepEvent::AddAsync(AddStepPayload {
+        ActivityEvent::AddAsync(AddActivityPayload {
             id: id.into(),
             kind: kind.into(),
             config,
@@ -56,38 +56,38 @@ impl StepEvent {
     }
 
     pub fn start(id: impl Into<String>) -> Self {
-        StepEvent::Start(id.into())
+        ActivityEvent::Start(id.into())
     }
 
     pub fn complete(id: impl Into<String>, output: Option<Value>) -> Self {
-        StepEvent::Complete(CompletePayload {
+        ActivityEvent::Complete(CompletePayload {
             id: id.into(),
             output,
         })
     }
 
     pub fn failed(id: impl Into<String>, reason: Option<String>) -> Self {
-        StepEvent::Failed(FailurePayload {
+        ActivityEvent::Failed(FailurePayload {
             id: id.into(),
             reason,
         })
     }
 
     pub fn error(id: impl Into<String>, reason: Option<String>) -> Self {
-        StepEvent::Error(FailurePayload {
+        ActivityEvent::Error(FailurePayload {
             id: id.into(),
             reason,
         })
     }
 
-    pub fn step_id(&self) -> &StepId {
+    pub fn activity_id(&self) -> &ActivityId {
         match self {
-            StepEvent::AddSync(p) => &p.id,
-            StepEvent::AddAsync(p) => &p.id,
-            StepEvent::Start(id) => id,
-            StepEvent::Complete(p) => &p.id,
-            StepEvent::Failed(p) => &p.id,
-            StepEvent::Error(p) => &p.id,
+            ActivityEvent::AddSync(p) => &p.id,
+            ActivityEvent::AddAsync(p) => &p.id,
+            ActivityEvent::Start(id) => id,
+            ActivityEvent::Complete(p) => &p.id,
+            ActivityEvent::Failed(p) => &p.id,
+            ActivityEvent::Error(p) => &p.id,
         }
     }
 }

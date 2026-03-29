@@ -2,15 +2,15 @@ use cmd_spec::ShellCommand;
 use evented_worker::api::events::EventStream;
 use evented_worker::fixtures::get_registry;
 use evented_worker::runner::Controller;
-use evented_worker::steps::shell::{StepParameters, get_step};
+use evented_worker::activities::shell::{ActivityParameters, get_activity};
 use evented_worker::view::summarize;
 use std::cell::RefCell;
 use std::rc::Rc;
 
 fn quality_check() -> EventStream {
-    vec![get_step(
+    vec![get_activity(
         "0",
-        StepParameters {
+        ActivityParameters {
             commands: vec![
                 ShellCommand::new("cargo").arg("fmt"),
                 ShellCommand::new("cargo").args(["clippy", "--fix"]),

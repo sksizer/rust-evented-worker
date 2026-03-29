@@ -30,14 +30,14 @@ impl Controller {
     pub fn start(&mut self) -> DefaultExecutionState {
         let mut execution_state = restore(&self.event_log.borrow());
         loop {
-            let Some(step_event) = scheduler(&execution_state) else {
+            let Some(activity_event) = scheduler(&execution_state) else {
                 break;
             };
-            let start_event = Event::from(step_event.clone());
+            let start_event = Event::from(activity_event.clone());
             self.event_log.borrow_mut().push(start_event.clone());
             execution_state = reduce(execution_state, &start_event);
 
-            let result_event = process(&execution_state, &self.registry, &step_event);
+            let result_event = process(&execution_state, &self.registry, &activity_event);
             self.event_log.borrow_mut().push(result_event.clone());
             execution_state = reduce(execution_state, &result_event);
         }

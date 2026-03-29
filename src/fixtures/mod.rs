@@ -1,5 +1,5 @@
 mod registry;
-mod step_modules;
+mod activity_modules;
 
 pub use registry::get_registry;
-pub use step_modules::get_test_step_modules;
+pub use activity_modules::get_test_activity_modules;

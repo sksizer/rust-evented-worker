@@ -1,10 +1,10 @@
 use cmd_spec::ShellCommand;
 use evented_worker::api::events::{Event, EventStream};
 use evented_worker::fixtures::get_registry;
-use evented_worker::fixtures::get_test_step_modules;
+use evented_worker::fixtures::get_test_activity_modules;
 use evented_worker::runner::Controller;
 use evented_worker::runner::Registry;
-use evented_worker::steps::shell::{StepParameters, get_step};
+use evented_worker::activities::shell::{ActivityParameters, get_activity};
 use evented_worker::{runner, view};
 use log::trace;
 use serde_json::json;
@@ -13,7 +13,7 @@ use std::rc::Rc;
 
 fn main() {
     pretty_env_logger::init();
-    let registry = Registry::new(Some(get_test_step_modules()), None);
+    let registry = Registry::new(Some(get_test_activity_modules()), None);
     let event_stream: EventStream = vec![Event::add_sync(
         "1",
         "echo",
@@ -22,20 +22,20 @@ fn main() {
     let mut execution_state = runner::restore(&event_stream);
     view::summarize::execution_state(&execution_state);
 
-    // Step 1: schedule (produces a StepEvent), reduce it, then process and reduce the result
-    let step_event = runner::scheduler(&execution_state).unwrap();
-    let start_event = Event::from(step_event.clone());
+    // Activity 1: schedule (produces an ActivityEvent), reduce it, then process and reduce the result
+    let activity_event = runner::scheduler(&execution_state).unwrap();
+    let start_event = Event::from(activity_event.clone());
     execution_state = runner::reduce(execution_state, &start_event);
-    let result_event = runner::process(&execution_state, &registry, &step_event);
+    let result_event = runner::process(&execution_state, &registry, &activity_event);
     execution_state = runner::reduce(execution_state, &result_event);
     view::summarize::execution_state(&execution_state);
 
-    // Step 2
+    // Activity 2
     execution_state = runner::reduce(execution_state, &Event::add_sync("2", "echo", None));
-    let step_event = runner::scheduler(&execution_state).unwrap();
-    let start_event = Event::from(step_event.clone());
+    let activity_event = runner::scheduler(&execution_state).unwrap();
+    let start_event = Event::from(activity_event.clone());
     execution_state = runner::reduce(execution_state, &start_event);
-    let result_event = runner::process(&execution_state, &registry, &step_event);
+    let result_event = runner::process(&execution_state, &registry, &activity_event);
     execution_state = runner::reduce(execution_state, &result_event);
     view::summarize::execution_state(&execution_state);
 
@@ -59,9 +59,9 @@ fn example_one() {
 fn example_two() {
     trace!("Example 2");
     let event_log = Rc::new(RefCell::new(vec![
-        get_step(
+        get_activity(
             "0",
-            StepParameters {
+            ActivityParameters {
                 commands: vec![ShellCommand::new("ls")],
             },
         ),

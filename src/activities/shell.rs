@@ -1,5 +1,5 @@
 use crate::api::events::Event;
-use crate::api::steps::{StepConfig, StepError, StepInput, SyncStepHandler};
+use crate::api::activities::{ActivityConfig, ActivityError, ActivityInput, SyncActivityHandler};
 use cmd_spec::ShellCommand;
 use log::trace;
 use serde::Deserialize;
@@ -7,12 +7,14 @@ use serde_json::{Value, json};
 
 static NAME: &str = "shell";
 
-fn validate_config(config: Option<Value>) -> Result<(), StepError> {
+fn validate_config(config: Option<Value>) -> Result<(), ActivityError> {
     match config {
-        None => Err(StepError::InvalidConfig("config is required".to_string())),
+        None => Err(ActivityError::InvalidConfig(
+            "config is required".to_string(),
+        )),
         Some(value) => get_config(value)
             .map(|_| ())
-            .map_err(|e| StepError::InvalidConfig(e.to_string())),
+            .map_err(|e| ActivityError::InvalidConfig(e.to_string())),
     }
 }
 
@@ -29,7 +31,7 @@ struct Config {
     commands: Vec<ShellCommand>,
 }
 
-fn shell_handler(config: StepConfig, _input: StepInput) -> Result<Value, Vec<String>> {
+fn shell_handler(config: ActivityConfig, _input: ActivityInput) -> Result<Value, Vec<String>> {
     let config = get_config(config.0.unwrap()).unwrap();
     let mut results: Vec<String> = vec![];
     config.commands.iter().for_each(|command| {
@@ -47,9 +49,9 @@ fn shell_handler(config: StepConfig, _input: StepInput) -> Result<Value, Vec<Str
     ))
 }
 
-pub fn get_shell_module() -> SyncStepHandler {
-    SyncStepHandler {
-        name: "Synchronous Shell Step".to_string(),
+pub fn get_shell_module() -> SyncActivityHandler {
+    SyncActivityHandler {
+        name: "Synchronous Shell Activity".to_string(),
         id: NAME.to_string(),
         description: "Executes a shell command synchronously".to_string(),
         validate_config: Some(validate_config),
@@ -58,14 +60,14 @@ pub fn get_shell_module() -> SyncStepHandler {
     }
 }
 
-pub struct StepParameters {
+pub struct ActivityParameters {
     pub commands: Vec<ShellCommand>,
 }
 
-pub fn get_step(id: &str, step_parameters: StepParameters) -> Event {
+pub fn get_activity(id: &str, activity_parameters: ActivityParameters) -> Event {
     Event::add_sync(
         id,
         NAME,
-        Some(json!({ "commands": step_parameters.commands })),
+        Some(json!({ "commands": activity_parameters.commands })),
     )
 }

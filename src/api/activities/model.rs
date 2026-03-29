@@ -1,72 +1,72 @@
-use crate::api::steps::StepCore;
+use crate::api::activities::ActivityCore;
 use chrono::{DateTime, Utc};
 use serde_json::Value;
 
 // --- Shared composites ---
 
 #[derive(Clone, Debug)]
-pub struct RanStep {
+pub struct RanActivity {
     pub started_at: DateTime<Utc>,
     pub input: Option<Value>,
 }
 
 #[derive(Clone, Debug)]
-pub struct CompletedStep {
-    pub ran: RanStep,
+pub struct CompletedActivity {
+    pub ran: RanActivity,
     pub output: Option<Value>,
 }
 
 pub type Failure = Option<Vec<String>>;
 
 #[derive(Clone, Debug)]
-pub struct FailedStep {
-    pub ran: RanStep,
+pub struct FailedActivity {
+    pub ran: RanActivity,
     pub failure: Failure,
 }
 
 // ============================================================
-// SyncStep typestate structs
+// SyncActivity typestate structs
 // ============================================================
 
 #[derive(Clone, Debug)]
 pub struct SyncNew {
-    pub core: StepCore,
+    pub core: ActivityCore,
 }
 
 #[derive(Clone, Debug)]
 pub struct SyncReady {
-    pub core: StepCore,
+    pub core: ActivityCore,
     pub input: Option<Value>,
 }
 
 #[derive(Clone, Debug)]
 pub struct SyncRunning {
-    pub core: StepCore,
-    pub ran: RanStep,
+    pub core: ActivityCore,
+    pub ran: RanActivity,
 }
 
 #[derive(Clone, Debug)]
 pub struct SyncCompleted {
-    pub core: StepCore,
-    pub completed: CompletedStep,
+    pub core: ActivityCore,
+    pub completed: CompletedActivity,
 }
 
 #[derive(Clone, Debug)]
 pub struct SyncFailed {
-    pub core: StepCore,
-    pub failed: FailedStep,
+    pub core: ActivityCore,
+    pub failed: FailedActivity,
 }
 
 #[derive(Clone, Debug)]
 pub struct SyncError {
-    pub core: StepCore,
-    pub failed: FailedStep,
+    pub core: ActivityCore,
+    pub failed: FailedActivity,
 }
 
 // --- Creators ---
 
 impl SyncNew {
-    pub fn new(core: StepCore) -> Self {
+    pub fn new(core: ActivityCore) -> Self {
         SyncNew { core }
     }
 }
@@ -86,7 +86,7 @@ impl SyncReady {
     pub fn start(self) -> SyncRunning {
         SyncRunning {
             core: self.core,
-            ran: RanStep {
+            ran: RanActivity {
                 started_at: Utc::now(),
                 input: self.input,
             },
@@ -98,7 +98,7 @@ impl SyncRunning {
     pub fn complete(self, output: Option<Value>) -> SyncCompleted {
         SyncCompleted {
             core: self.core,
-            completed: CompletedStep {
+            completed: CompletedActivity {
                 ran: self.ran,
                 output,
             },
@@ -108,7 +108,7 @@ impl SyncRunning {
     pub fn fail(self, failure: Failure) -> SyncFailed {
         SyncFailed {
             core: self.core,
-            failed: FailedStep {
+            failed: FailedActivity {
                 ran: self.ran,
                 failure,
             },
@@ -118,7 +118,7 @@ impl SyncRunning {
     pub fn error(self, failure: Failure) -> SyncError {
         SyncError {
             core: self.core,
-            failed: FailedStep {
+            failed: FailedActivity {
                 ran: self.ran,
                 failure,
             },
@@ -127,42 +127,42 @@ impl SyncRunning {
 }
 
 // ============================================================
-// AsyncStep typestate structs
+// AsyncActivity typestate structs
 // ============================================================
 
 #[derive(Clone, Debug)]
 pub struct AsyncReady {
-    pub core: StepCore,
+    pub core: ActivityCore,
 }
 
 #[derive(Clone, Debug)]
 pub struct AsyncRunning {
-    pub core: StepCore,
-    pub ran: RanStep,
+    pub core: ActivityCore,
+    pub ran: RanActivity,
 }
 
 #[derive(Clone, Debug)]
 pub struct AsyncCompleted {
-    pub core: StepCore,
-    pub completed: CompletedStep,
+    pub core: ActivityCore,
+    pub completed: CompletedActivity,
 }
 
 #[derive(Clone, Debug)]
 pub struct AsyncFailed {
-    pub core: StepCore,
-    pub failed: FailedStep,
+    pub core: ActivityCore,
+    pub failed: FailedActivity,
 }
 
 #[derive(Clone, Debug)]
 pub struct AsyncError {
-    pub core: StepCore,
-    pub failed: FailedStep,
+    pub core: ActivityCore,
+    pub failed: FailedActivity,
 }
 
 // --- Creators ---
 
 impl AsyncReady {
-    pub fn new(core: StepCore) -> Self {
+    pub fn new(core: ActivityCore) -> Self {
         AsyncReady { core }
     }
 }
@@ -173,7 +173,7 @@ impl AsyncReady {
     pub fn start(self, input: Option<Value>) -> AsyncRunning {
         AsyncRunning {
             core: self.core,
-            ran: RanStep {
+            ran: RanActivity {
                 started_at: Utc::now(),
                 input,
             },
@@ -185,7 +185,7 @@ impl AsyncRunning {
     pub fn complete(self, output: Option<Value>) -> AsyncCompleted {
         AsyncCompleted {
             core: self.core,
-            completed: CompletedStep {
+            completed: CompletedActivity {
                 ran: self.ran,
                 output,
             },
@@ -195,7 +195,7 @@ impl AsyncRunning {
     pub fn fail(self, failure: Failure) -> AsyncFailed {
         AsyncFailed {
             core: self.core,
-            failed: FailedStep {
+            failed: FailedActivity {
                 ran: self.ran,
                 failure,
             },
@@ -205,7 +205,7 @@ impl AsyncRunning {
     pub fn error(self, failure: Failure) -> AsyncError {
         AsyncError {
             core: self.core,
-            failed: FailedStep {
+            failed: FailedActivity {
                 ran: self.ran,
                 failure,
             },
@@ -214,11 +214,11 @@ impl AsyncRunning {
 }
 
 // ============================================================
-// Step enums — for when you need to hold any step dynamically
+// Activity enums — for when you need to hold any activity dynamically
 // ============================================================
 
 #[derive(Clone, Debug)]
-pub enum SyncStep {
+pub enum SyncActivity {
     New(SyncNew),
     Ready(SyncReady),
     Running(SyncRunning),
@@ -228,7 +228,7 @@ pub enum SyncStep {
 }
 
 #[derive(Clone, Debug)]
-pub enum AsyncStep {
+pub enum AsyncActivity {
     Ready(AsyncReady),
     Running(AsyncRunning),
     Completed(AsyncCompleted),
@@ -237,24 +237,24 @@ pub enum AsyncStep {
 }
 
 #[derive(Clone, Debug)]
-pub enum Step {
-    Sync(SyncStep),
-    Async(AsyncStep),
+pub enum Activity {
+    Sync(SyncActivity),
+    Async(AsyncActivity),
 }
 
 // ============================================================
 // Shared accessor trait + macro
 // ============================================================
 
-pub trait StepState {
-    fn core(&self) -> &StepCore;
+pub trait ActivityState {
+    fn core(&self) -> &ActivityCore;
     fn input(&self) -> Option<&Value>;
 }
 
-macro_rules! impl_step_state {
+macro_rules! impl_activity_state {
     ($t:ty, core_only) => {
-        impl StepState for $t {
-            fn core(&self) -> &StepCore {
+        impl ActivityState for $t {
+            fn core(&self) -> &ActivityCore {
                 &self.core
             }
             fn input(&self) -> Option<&Value> {
@@ -263,8 +263,8 @@ macro_rules! impl_step_state {
         }
     };
     ($t:ty, direct_input) => {
-        impl StepState for $t {
-            fn core(&self) -> &StepCore {
+        impl ActivityState for $t {
+            fn core(&self) -> &ActivityCore {
                 &self.core
             }
             fn input(&self) -> Option<&Value> {
@@ -273,8 +273,8 @@ macro_rules! impl_step_state {
         }
     };
     ($t:ty, ran) => {
-        impl StepState for $t {
-            fn core(&self) -> &StepCore {
+        impl ActivityState for $t {
+            fn core(&self) -> &ActivityCore {
                 &self.core
             }
             fn input(&self) -> Option<&Value> {
@@ -283,8 +283,8 @@ macro_rules! impl_step_state {
         }
     };
     ($t:ty, completed) => {
-        impl StepState for $t {
-            fn core(&self) -> &StepCore {
+        impl ActivityState for $t {
+            fn core(&self) -> &ActivityCore {
                 &self.core
             }
             fn input(&self) -> Option<&Value> {
@@ -293,8 +293,8 @@ macro_rules! impl_step_state {
         }
     };
     ($t:ty, failed) => {
-        impl StepState for $t {
-            fn core(&self) -> &StepCore {
+        impl ActivityState for $t {
+            fn core(&self) -> &ActivityCore {
                 &self.core
             }
             fn input(&self) -> Option<&Value> {
@@ -304,72 +304,72 @@ macro_rules! impl_step_state {
     };
 }
 
-impl_step_state!(SyncNew, core_only);
-impl_step_state!(SyncReady, direct_input);
-impl_step_state!(SyncRunning, ran);
-impl_step_state!(SyncCompleted, completed);
-impl_step_state!(SyncFailed, failed);
-impl_step_state!(SyncError, failed);
+impl_activity_state!(SyncNew, core_only);
+impl_activity_state!(SyncReady, direct_input);
+impl_activity_state!(SyncRunning, ran);
+impl_activity_state!(SyncCompleted, completed);
+impl_activity_state!(SyncFailed, failed);
+impl_activity_state!(SyncError, failed);
 
-impl_step_state!(AsyncReady, core_only);
-impl_step_state!(AsyncRunning, ran);
-impl_step_state!(AsyncCompleted, completed);
-impl_step_state!(AsyncFailed, failed);
-impl_step_state!(AsyncError, failed);
+impl_activity_state!(AsyncReady, core_only);
+impl_activity_state!(AsyncRunning, ran);
+impl_activity_state!(AsyncCompleted, completed);
+impl_activity_state!(AsyncFailed, failed);
+impl_activity_state!(AsyncError, failed);
 
-// --- Enum-level StepState impls ---
+// --- Enum-level ActivityState impls ---
 
-impl StepState for SyncStep {
-    fn core(&self) -> &StepCore {
+impl ActivityState for SyncActivity {
+    fn core(&self) -> &ActivityCore {
         match self {
-            SyncStep::New(s) => s.core(),
-            SyncStep::Ready(s) => s.core(),
-            SyncStep::Running(s) => s.core(),
-            SyncStep::Completed(s) => s.core(),
-            SyncStep::Failed(s) => s.core(),
-            SyncStep::Error(s) => s.core(),
+            SyncActivity::New(s) => s.core(),
+            SyncActivity::Ready(s) => s.core(),
+            SyncActivity::Running(s) => s.core(),
+            SyncActivity::Completed(s) => s.core(),
+            SyncActivity::Failed(s) => s.core(),
+            SyncActivity::Error(s) => s.core(),
         }
     }
     fn input(&self) -> Option<&Value> {
         match self {
-            SyncStep::New(s) => s.input(),
-            SyncStep::Ready(s) => s.input(),
-            SyncStep::Running(s) => s.input(),
-            SyncStep::Completed(s) => s.input(),
-            SyncStep::Failed(s) => s.input(),
-            SyncStep::Error(s) => s.input(),
+            SyncActivity::New(s) => s.input(),
+            SyncActivity::Ready(s) => s.input(),
+            SyncActivity::Running(s) => s.input(),
+            SyncActivity::Completed(s) => s.input(),
+            SyncActivity::Failed(s) => s.input(),
+            SyncActivity::Error(s) => s.input(),
         }
     }
 }
 
-impl StepState for AsyncStep {
-    fn core(&self) -> &StepCore {
+impl ActivityState for AsyncActivity {
+    fn core(&self) -> &ActivityCore {
         match self {
-            AsyncStep::Ready(s) => s.core(),
-            AsyncStep::Running(s) => s.core(),
-            AsyncStep::Completed(s) => s.core(),
-            AsyncStep::Failed(s) => s.core(),
-            AsyncStep::Error(s) => s.core(),
+            AsyncActivity::Ready(s) => s.core(),
+            AsyncActivity::Running(s) => s.core(),
+            AsyncActivity::Completed(s) => s.core(),
+            AsyncActivity::Failed(s) => s.core(),
+            AsyncActivity::Error(s) => s.core(),
         }
     }
     fn input(&self) -> Option<&Value> {
         match self {
-            AsyncStep::Ready(s) => s.input(),
-            AsyncStep::Running(s) => s.input(),
-            AsyncStep::Completed(s) => s.input(),
-            AsyncStep::Failed(s) => s.input(),
-            AsyncStep::Error(s) => s.input(),
+            AsyncActivity::Ready(s) => s.input(),
+            AsyncActivity::Running(s) => s.input(),
+            AsyncActivity::Completed(s) => s.input(),
+            AsyncActivity::Failed(s) => s.input(),
+            AsyncActivity::Error(s) => s.input(),
         }
     }
 }
 
-// --- Step enum convenience methods ---
+// --- Activity enum convenience methods ---
 
-impl Step {
-    pub fn core(&self) -> &StepCore {
+impl Activity {
+    pub fn core(&self) -> &ActivityCore {
         match self {
-            Step::Sync(s) => s.core(),
-            Step::Async(a) => a.core(),
+            Activity::Sync(s) => s.core(),
+            Activity::Async(a) => a.core(),
         }
     }
 
@@ -385,115 +385,119 @@ impl Step {
 
     pub fn input(&self) -> Option<&Value> {
         match self {
-            Step::Sync(s) => s.input(),
-            Step::Async(a) => a.input(),
+            Activity::Sync(s) => s.input(),
+            Activity::Async(a) => a.input(),
         }
     }
 
     pub fn is_closed(&self) -> bool {
         matches!(
             self,
-            Step::Sync(SyncStep::Completed(_) | SyncStep::Failed(_) | SyncStep::Error(_))
-                | Step::Async(AsyncStep::Completed(_) | AsyncStep::Failed(_) | AsyncStep::Error(_))
+            Activity::Sync(
+                SyncActivity::Completed(_) | SyncActivity::Failed(_) | SyncActivity::Error(_)
+            ) | Activity::Async(
+                AsyncActivity::Completed(_) | AsyncActivity::Failed(_) | AsyncActivity::Error(_)
+            )
         )
     }
 
     pub fn is_runnable(&self) -> bool {
         matches!(
             self,
-            Step::Sync(SyncStep::Ready(_))
-                | Step::Async(AsyncStep::Ready(_) | AsyncStep::Running(_))
+            Activity::Sync(SyncActivity::Ready(_))
+                | Activity::Async(AsyncActivity::Ready(_) | AsyncActivity::Running(_))
         )
     }
 
     pub fn is_completed(&self) -> bool {
         matches!(
             self,
-            Step::Sync(SyncStep::Completed(_)) | Step::Async(AsyncStep::Completed(_))
+            Activity::Sync(SyncActivity::Completed(_))
+                | Activity::Async(AsyncActivity::Completed(_))
         )
     }
 
     pub fn is_failed(&self) -> bool {
         matches!(
             self,
-            Step::Sync(SyncStep::Failed(_)) | Step::Async(AsyncStep::Failed(_))
+            Activity::Sync(SyncActivity::Failed(_)) | Activity::Async(AsyncActivity::Failed(_))
         )
     }
 
     pub fn is_error(&self) -> bool {
         matches!(
             self,
-            Step::Sync(SyncStep::Error(_)) | Step::Async(AsyncStep::Error(_))
+            Activity::Sync(SyncActivity::Error(_)) | Activity::Async(AsyncActivity::Error(_))
         )
     }
 }
 
 // --- From impls for ergonomic wrapping ---
 
-impl From<SyncNew> for SyncStep {
+impl From<SyncNew> for SyncActivity {
     fn from(s: SyncNew) -> Self {
-        SyncStep::New(s)
+        SyncActivity::New(s)
     }
 }
-impl From<SyncReady> for SyncStep {
+impl From<SyncReady> for SyncActivity {
     fn from(s: SyncReady) -> Self {
-        SyncStep::Ready(s)
+        SyncActivity::Ready(s)
     }
 }
-impl From<SyncRunning> for SyncStep {
+impl From<SyncRunning> for SyncActivity {
     fn from(s: SyncRunning) -> Self {
-        SyncStep::Running(s)
+        SyncActivity::Running(s)
     }
 }
-impl From<SyncCompleted> for SyncStep {
+impl From<SyncCompleted> for SyncActivity {
     fn from(s: SyncCompleted) -> Self {
-        SyncStep::Completed(s)
+        SyncActivity::Completed(s)
     }
 }
-impl From<SyncFailed> for SyncStep {
+impl From<SyncFailed> for SyncActivity {
     fn from(s: SyncFailed) -> Self {
-        SyncStep::Failed(s)
+        SyncActivity::Failed(s)
     }
 }
-impl From<SyncError> for SyncStep {
+impl From<SyncError> for SyncActivity {
     fn from(s: SyncError) -> Self {
-        SyncStep::Error(s)
+        SyncActivity::Error(s)
     }
 }
 
-impl From<AsyncReady> for AsyncStep {
+impl From<AsyncReady> for AsyncActivity {
     fn from(s: AsyncReady) -> Self {
-        AsyncStep::Ready(s)
+        AsyncActivity::Ready(s)
     }
 }
-impl From<AsyncRunning> for AsyncStep {
+impl From<AsyncRunning> for AsyncActivity {
     fn from(s: AsyncRunning) -> Self {
-        AsyncStep::Running(s)
+        AsyncActivity::Running(s)
     }
 }
-impl From<AsyncCompleted> for AsyncStep {
+impl From<AsyncCompleted> for AsyncActivity {
     fn from(s: AsyncCompleted) -> Self {
-        AsyncStep::Completed(s)
+        AsyncActivity::Completed(s)
     }
 }
-impl From<AsyncFailed> for AsyncStep {
+impl From<AsyncFailed> for AsyncActivity {
     fn from(s: AsyncFailed) -> Self {
-        AsyncStep::Failed(s)
+        AsyncActivity::Failed(s)
     }
 }
-impl From<AsyncError> for AsyncStep {
+impl From<AsyncError> for AsyncActivity {
     fn from(s: AsyncError) -> Self {
-        AsyncStep::Error(s)
+        AsyncActivity::Error(s)
     }
 }
 
-impl From<SyncStep> for Step {
-    fn from(s: SyncStep) -> Self {
-        Step::Sync(s)
+impl From<SyncActivity> for Activity {
+    fn from(s: SyncActivity) -> Self {
+        Activity::Sync(s)
     }
 }
-impl From<AsyncStep> for Step {
-    fn from(s: AsyncStep) -> Self {
-        Step::Async(s)
+impl From<AsyncActivity> for Activity {
+    fn from(s: AsyncActivity) -> Self {
+        Activity::Async(s)
     }
 }

@@ -1,5 +1,5 @@
 use crate::api::execution::{DefaultExecutionState, ExecutionState, ExecutionStatus};
-use crate::api::steps::{AsyncStep, Step, SyncStep};
+use crate::api::activities::{AsyncActivity, Activity, SyncActivity};
 use colored::Colorize;
 
 static REPEAT: usize = 80;
@@ -19,43 +19,43 @@ pub fn execution_state(execution_state: &DefaultExecutionState) {
     println!("{} {}", "Execution Status:".bold(), colored_status.bold());
     println!("{}", "─".repeat(REPEAT));
 
-    if execution_state.step_states.is_empty() {
-        println!("  {}", "(no steps)".dimmed());
+    if execution_state.activity_states.is_empty() {
+        println!("  {}", "(no activities)".dimmed());
         return;
     }
 
-    for (i, step) in execution_state.step_states.iter().enumerate() {
-        let (icon, status_label) = match step {
-            Step::Sync(SyncStep::New(_)) => ("◌".white(), "New".white()),
-            Step::Sync(SyncStep::Ready(_)) => ("○".white(), "Ready".white()),
-            Step::Sync(SyncStep::Running(_)) => ("●".cyan(), "Running".cyan()),
-            Step::Sync(SyncStep::Completed(_)) => ("✔".green(), "Completed".green()),
-            Step::Sync(SyncStep::Failed(_)) => ("✘".red(), "Failed".red()),
-            Step::Sync(SyncStep::Error(_)) => ("⚠".yellow(), "Error".yellow()),
-            Step::Async(AsyncStep::Ready(_)) => ("○".white(), "Ready".white()),
-            Step::Async(AsyncStep::Running(_)) => ("●".cyan(), "Running".cyan()),
-            Step::Async(AsyncStep::Completed(_)) => ("✔".green(), "Completed".green()),
-            Step::Async(AsyncStep::Failed(_)) => ("✘".red(), "Failed".red()),
-            Step::Async(AsyncStep::Error(_)) => ("⚠".yellow(), "Error".yellow()),
+    for (i, activity) in execution_state.activity_states.iter().enumerate() {
+        let (icon, status_label) = match activity {
+            Activity::Sync(SyncActivity::New(_)) => ("◌".white(), "New".white()),
+            Activity::Sync(SyncActivity::Ready(_)) => ("○".white(), "Ready".white()),
+            Activity::Sync(SyncActivity::Running(_)) => ("●".cyan(), "Running".cyan()),
+            Activity::Sync(SyncActivity::Completed(_)) => ("✔".green(), "Completed".green()),
+            Activity::Sync(SyncActivity::Failed(_)) => ("✘".red(), "Failed".red()),
+            Activity::Sync(SyncActivity::Error(_)) => ("⚠".yellow(), "Error".yellow()),
+            Activity::Async(AsyncActivity::Ready(_)) => ("○".white(), "Ready".white()),
+            Activity::Async(AsyncActivity::Running(_)) => ("●".cyan(), "Running".cyan()),
+            Activity::Async(AsyncActivity::Completed(_)) => ("✔".green(), "Completed".green()),
+            Activity::Async(AsyncActivity::Failed(_)) => ("✘".red(), "Failed".red()),
+            Activity::Async(AsyncActivity::Error(_)) => ("⚠".yellow(), "Error".yellow()),
         };
         println!(
-            "  {} Step {} [{}] ({}): {}",
+            "  {} Activity {} [{}] ({}): {}",
             icon,
             i + 1,
-            step.id().dimmed(),
-            step.kind().dimmed(),
+            activity.id().dimmed(),
+            activity.kind().dimmed(),
             status_label
         );
 
-        if let Some(config) = step.config() {
+        if let Some(config) = activity.config() {
             println!("      {} {}", "config:".dimmed(), config);
         }
-        if let Some(input) = step.input() {
+        if let Some(input) = activity.input() {
             println!("      {} {}", "input:".dimmed(), input);
         }
 
-        match step {
-            Step::Sync(SyncStep::Completed(sc)) => {
+        match activity {
+            Activity::Sync(SyncActivity::Completed(sc)) => {
                 if let Some(output) = &sc.completed.output {
                     println!(
                         "      {} {}",
@@ -66,7 +66,7 @@ pub fn execution_state(execution_state: &DefaultExecutionState) {
                     );
                 }
             }
-            Step::Async(AsyncStep::Completed(ac)) => {
+            Activity::Async(AsyncActivity::Completed(ac)) => {
                 if let Some(output) = &ac.completed.output {
                     println!(
                         "      {} {}",
@@ -77,17 +77,17 @@ pub fn execution_state(execution_state: &DefaultExecutionState) {
                     );
                 }
             }
-            Step::Sync(SyncStep::Failed(sf)) => {
+            Activity::Sync(SyncActivity::Failed(sf)) => {
                 if let Some(reasons) = &sf.failed.failure {
                     println!("      {} {}", "failure:".dimmed(), reasons.join("; ").red());
                 }
             }
-            Step::Async(AsyncStep::Failed(af)) => {
+            Activity::Async(AsyncActivity::Failed(af)) => {
                 if let Some(reasons) = &af.failed.failure {
                     println!("      {} {}", "failure:".dimmed(), reasons.join("; ").red());
                 }
             }
-            Step::Sync(SyncStep::Error(se)) => {
+            Activity::Sync(SyncActivity::Error(se)) => {
                 if let Some(reasons) = &se.failed.failure {
                     println!(
                         "      {} {}",
@@ -96,7 +96,7 @@ pub fn execution_state(execution_state: &DefaultExecutionState) {
                     );
                 }
             }
-            Step::Async(AsyncStep::Error(ae)) => {
+            Activity::Async(AsyncActivity::Error(ae)) => {
                 if let Some(reasons) = &ae.failed.failure {
                     println!(
                         "      {} {}",

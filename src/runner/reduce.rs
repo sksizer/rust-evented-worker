@@ -1,19 +1,19 @@
-mod add_step;
+mod add_activity;
 mod get_execution_status;
-mod update_step;
+mod update_activity;
 
 use crate::api::events::Event;
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
-use crate::api::steps::{AsyncReady, AsyncStep, Step, StepCore, StepEvent, SyncNew, SyncStep};
+use crate::api::activities::{AsyncReady, AsyncActivity, Activity, ActivityCore, ActivityEvent, SyncNew, SyncActivity};
 
-use add_step::append_step_state;
+use add_activity::append_activity_state;
 pub use get_execution_status::get_execution_status;
-use update_step::update;
+use update_activity::update;
 
 /// Takes prior state + an event and returns an updated state
 pub fn reduce(execution_state: DefaultExecutionState, event: &Event) -> DefaultExecutionState {
     match event {
-        Event::Step(step_event) => reduce_step(execution_state, step_event),
+        Event::Activity(activity_event) => reduce_activity(execution_state, activity_event),
         Event::System(_) => {
             // TODO - consider how system events affect execution state
             execution_state
@@ -21,78 +21,91 @@ pub fn reduce(execution_state: DefaultExecutionState, event: &Event) -> DefaultE
     }
 }
 
-fn reduce_step(
+fn reduce_activity(
     execution_state: DefaultExecutionState,
-    step_event: &StepEvent,
+    activity_event: &ActivityEvent,
 ) -> DefaultExecutionState {
-    match step_event {
-        StepEvent::AddSync(payload) => {
-            let core = StepCore {
+    match activity_event {
+        ActivityEvent::AddSync(payload) => {
+            let core = ActivityCore {
                 id: payload.id.clone(),
                 kind: payload.kind.clone(),
                 config: payload.config.clone(),
             };
-            let step = Step::from(SyncStep::from(SyncNew::new(core).make_ready(None)));
-            append_step_state(execution_state, step).unwrap()
+            let activity = Activity::from(SyncActivity::from(SyncNew::new(core).make_ready(None)));
+            append_activity_state(execution_state, activity).unwrap()
         }
-        StepEvent::AddAsync(payload) => {
-            let core = StepCore {
+        ActivityEvent::AddAsync(payload) => {
+            let core = ActivityCore {
                 id: payload.id.clone(),
                 kind: payload.kind.clone(),
                 config: payload.config.clone(),
             };
-            let step = Step::from(AsyncStep::from(AsyncReady::new(core)));
-            append_step_state(execution_state, step).unwrap()
+            let activity = Activity::from(AsyncActivity::from(AsyncReady::new(core)));
+            append_activity_state(execution_state, activity).unwrap()
         }
-        StepEvent::Start(id) => {
-            let new_step = match execution_state.get_step_state(id) {
-                Some(Step::Sync(SyncStep::Ready(ready))) => {
-                    Step::from(SyncStep::from(ready.clone().start()))
+        ActivityEvent::Start(id) => {
+            let new_activity = match execution_state.get_activity_state(id) {
+                Some(Activity::Sync(SyncActivity::Ready(ready))) => {
+                    Activity::from(SyncActivity::from(ready.clone().start()))
                 }
-                Some(Step::Async(AsyncStep::Ready(ready))) => {
-                    Step::from(AsyncStep::from(ready.clone().start(None)))
+                Some(Activity::Async(AsyncActivity::Ready(ready))) => {
+                    Activity::from(AsyncActivity::from(ready.clone().start(None)))
                 }
-                _ => panic!("Invalid step state for Start event: {}", id),
+                _ => panic!("Invalid activity state for Start event: {}", id),
             };
-            update(execution_state, new_step).unwrap()
+            update(execution_state, new_activity).unwrap()
         }
-        StepEvent::Complete(payload) => {
-            let new_step = match execution_state.get_step_state(&payload.id) {
-                Some(Step::Sync(SyncStep::Running(running))) => Step::from(SyncStep::from(
-                    running.clone().complete(payload.output.clone()),
-                )),
-                Some(Step::Async(AsyncStep::Running(running))) => Step::from(AsyncStep::from(
-                    running.clone().complete(payload.output.clone()),
-                )),
-                _ => panic!("Invalid step state for Complete event: {}", payload.id),
+        ActivityEvent::Complete(payload) => {
+            let new_activity = match execution_state.get_activity_state(&payload.id) {
+                Some(Activity::Sync(SyncActivity::Running(running))) => {
+                    Activity::from(SyncActivity::from(
+                        running.clone().complete(payload.output.clone()),
+                    ))
+                }
+                Some(Activity::Async(AsyncActivity::Running(running))) => {
+                    Activity::from(AsyncActivity::from(
+                        running.clone().complete(payload.output.clone()),
+                    ))
+                }
+                _ => panic!(
+                    "Invalid activity state for Complete event: {}",
+                    payload.id
+                ),
             };
-            update(execution_state, new_step).unwrap()
+            update(execution_state, new_activity).unwrap()
         }
-        StepEvent::Failed(payload) => {
+        ActivityEvent::Failed(payload) => {
             let failure = payload.reason.as_ref().map(|r| vec![r.clone()]);
-            let new_step = match execution_state.get_step_state(&payload.id) {
-                Some(Step::Sync(SyncStep::Running(running))) => {
-                    Step::from(SyncStep::from(running.clone().fail(failure)))
+            let new_activity = match execution_state.get_activity_state(&payload.id) {
+                Some(Activity::Sync(SyncActivity::Running(running))) => {
+                    Activity::from(SyncActivity::from(running.clone().fail(failure)))
                 }
-                Some(Step::Async(AsyncStep::Running(running))) => {
-                    Step::from(AsyncStep::from(running.clone().fail(failure)))
+                Some(Activity::Async(AsyncActivity::Running(running))) => {
+                    Activity::from(AsyncActivity::from(running.clone().fail(failure)))
                 }
-                _ => panic!("Invalid step state for Failed event: {}", payload.id),
+                _ => panic!(
+                    "Invalid activity state for Failed event: {}",
+                    payload.id
+                ),
             };
-            update(execution_state, new_step).unwrap()
+            update(execution_state, new_activity).unwrap()
         }
-        StepEvent::Error(payload) => {
+        ActivityEvent::Error(payload) => {
             let failure = payload.reason.as_ref().map(|r| vec![r.clone()]);
-            let new_step = match execution_state.get_step_state(&payload.id) {
-                Some(Step::Sync(SyncStep::Running(running))) => {
-                    Step::from(SyncStep::from(running.clone().error(failure)))
+            let new_activity = match execution_state.get_activity_state(&payload.id) {
+                Some(Activity::Sync(SyncActivity::Running(running))) => {
+                    Activity::from(SyncActivity::from(running.clone().error(failure)))
                 }
-                Some(Step::Async(AsyncStep::Running(running))) => {
-                    Step::from(AsyncStep::from(running.clone().error(failure)))
+                Some(Activity::Async(AsyncActivity::Running(running))) => {
+                    Activity::from(AsyncActivity::from(running.clone().error(failure)))
                 }
-                _ => panic!("Invalid step state for Error event: {}", payload.id),
+                _ => panic!(
+                    "Invalid activity state for Error event: {}",
+                    payload.id
+                ),
             };
-            update(execution_state, new_step).unwrap()
+            update(execution_state, new_activity).unwrap()
         }
     }
 }

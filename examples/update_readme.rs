@@ -2,7 +2,7 @@ use cmd_spec::ShellCommand;
 use evented_worker::api::events::Event;
 use evented_worker::fixtures::get_registry;
 use evented_worker::runner::Controller;
-use evented_worker::steps::shell::{StepParameters, get_step};
+use evented_worker::activities::shell::{ActivityParameters, get_activity};
 use evented_worker::view;
 use log::trace;
 use serde_json::json;
@@ -12,9 +12,9 @@ use std::rc::Rc;
 fn main() {
     trace!("Example 3: Update Readme");
     let event_log = Rc::new(RefCell::new(vec![
-        get_step(
+        get_activity(
             "0",
-            StepParameters {
+            ActivityParameters {
                 commands: vec![ShellCommand::new("pnpm").args(vec![
                     "dlx",
                     "@anthropic-ai/claude-code",
@@ -25,15 +25,15 @@ fn main() {
                 ])],
             },
         ),
-        get_step(
+        get_activity(
             "1",
-            StepParameters {
+            ActivityParameters {
                 commands: vec![ShellCommand::new("git").args(vec!["add", "README.md"])],
             },
         ),
-        get_step(
+        get_activity(
             "2",
-            StepParameters {
+            ActivityParameters {
                 commands: vec![ShellCommand::new("git_commit_message").args(vec!["-a"])],
             },
         ),

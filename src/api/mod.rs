@@ -1,3 +1,3 @@
 pub mod events;
 pub mod execution;
-pub mod steps;
+pub mod activities;

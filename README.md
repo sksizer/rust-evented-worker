@@ -1,13 +1,13 @@
 # evented-worker
 
-An event-sourced workflow engine for Rust. Define workflows as sequences of named steps, execute them with a `Controller`, and recover from any point in execution by replaying the event log.
+An event-sourced workflow engine for Rust. Define workflows as sequences of named activities, execute them with a `Controller`, and recover from any point in execution by replaying the event log.
 
 ## Concepts
 
-- **Step** — a unit of work with a `kind` (handler name), optional config, and optional input/output
-- **StepEvent** — an immutable record of something that happened (step added, started, completed, failed, errored)
+- **Activity** — a unit of work with a `kind` (handler name), optional config, and optional input/output
+- **ActivityEvent** — an immutable record of something that happened (activity added, started, completed, failed, errored)
 - **EventStream** — the ordered log of all events; the authoritative source of truth for execution state
-- **Registry** — a catalog of named step handlers available at runtime
+- **Registry** — a catalog of named activity handlers available at runtime
 - **Controller** — orchestrates the execution loop: restores state, schedules the next event, processes it, and records results
 
 State is never stored directly. It is always derived by replaying the event stream through the `reduce` function.
@@ -23,20 +23,20 @@ crates/cmd-spec/    # Serializable shell command builder
 
 ### Controller (high-level)
 
-Define an event log with your steps, hand it to a `Controller`, and call `start()`:
+Define an event log with your activities, hand it to a `Controller`, and call `start()`:
 
 ```rust
 use evented_worker::runner::Controller;
 use evented_worker::fixtures::get_registry;
-use evented_worker::steps::shell::{StepParameters, get_step};
+use evented_worker::activities::shell::{ActivityParameters, get_activity};
 use cmd_spec::ShellCommand;
 use std::cell::RefCell;
 use std::rc::Rc;
 
 let event_log = Rc::new(RefCell::new(vec![
-    get_step(
+    get_activity(
         "format-and-lint",
-        StepParameters {
+        ActivityParameters {
             commands: vec![
                 ShellCommand::new("cargo").arg("fmt"),
                 ShellCommand::new("cargo").args(["clippy", "--fix"]),
@@ -55,19 +55,19 @@ Use `scheduler`, `process`, and `reduce` directly for full control:
 
 ```rust
 use evented_worker::{runner, view};
-use evented_worker::api::steps::StepEvent;
+use evented_worker::api::activities::ActivityEvent;
 use evented_worker::runner::Registry;
 use evented_worker::fixtures::get_registry;
 use serde_json::json;
 
 let registry = get_registry();
 let event_stream = vec![
-    StepEvent::add_sync("1", "echo", Some(json!({ "config": "hello" }))),
+    ActivityEvent::add_sync("1", "echo", Some(json!({ "config": "hello" }))),
 ];
 
 let mut state = runner::restore(&event_stream);
 
-// scheduler picks the next runnable step and returns a Start event
+// scheduler picks the next runnable activity and returns a Start event
 let start_event = runner::scheduler(&state).unwrap();
 state = runner::reduce(state, &start_event);
 
@@ -78,15 +78,15 @@ state = runner::reduce(state, &result_event);
 view::summarize::execution_state(&state);
 ```
 
-### Chaining steps
+### Chaining activities
 
-Steps pass output to the next step automatically. Use `resolve_prior_output` to wire the output of one step as input to the next:
+Activities pass output to the next activity automatically. Use `resolve_prior_output` to wire the output of one activity as input to the next:
 
 ```rust
 let event_log = Rc::new(RefCell::new(vec![
-    StepEvent::add_sync("0", "fixed_output", Some(json!({ "config": "DATA" }))),
-    StepEvent::add_sync("1", "echo", None),  // receives output of step 0
-    StepEvent::add_sync("2", "echo", None),  // receives output of step 1
+    ActivityEvent::add_sync("0", "fixed_output", Some(json!({ "config": "DATA" }))),
+    ActivityEvent::add_sync("1", "echo", None),  // receives output of activity 0
+    ActivityEvent::add_sync("2", "echo", None),  // receives output of activity 1
 ]));
 ```
 
@@ -95,32 +95,32 @@ let event_log = Rc::new(RefCell::new(vec![
 The execution loop follows this pattern each iteration:
 
 ```
-EventStream (Vec<StepEvent>)
+EventStream (Vec<ActivityEvent>)
     ↓ restore()
 DefaultExecutionState
-    ↓ scheduler()     → pick next runnable step, return Start event
+    ↓ scheduler()     → pick next runnable activity, return Start event
     ↓ reduce()        → apply Start event to state
-    ↓ process()       → call handler → produce result StepEvent
+    ↓ process()       → call handler → produce result ActivityEvent
     ↓ reduce()        → apply result to state
-    [repeat until no runnable steps remain]
+    [repeat until no runnable activities remain]
 ```
 
 ### Event types
 
 | Event | Meaning |
 |-------|---------|
-| `AddSync` / `AddAsync` | A step was added to the workflow |
-| `Start` | A step began executing |
-| `Complete` | A step finished successfully (may carry output) |
-| `Failed` | A step failed (may carry a reason) |
-| `Error` | A step encountered an error (may carry a reason) |
+| `AddSync` / `AddAsync` | An activity was added to the workflow |
+| `Start` | An activity began executing |
+| `Complete` | An activity finished successfully (may carry output) |
+| `Failed` | An activity failed (may carry a reason) |
+| `Error` | An activity encountered an error (may carry a reason) |
 | `SystemError` | An infrastructure-level error occurred |
 
-Recovery works by replaying the event stream from the beginning. If a process crashes mid-execution, replaying the existing events restores exact state — already-completed steps are not re-executed.
+Recovery works by replaying the event stream from the beginning. If a process crashes mid-execution, replaying the existing events restores exact state — already-completed activities are not re-executed.
 
 ## cmd_spec
 
-A serializable wrapper for `std::process::Command`, useful when step configurations need to be stored in the event log as JSON:
+A serializable wrapper for `std::process::Command`, useful when activity configurations need to be stored in the event log as JSON:
 
 ```rust
 use cmd_spec::ShellCommand;
@@ -142,7 +142,7 @@ Enable the `tokio` feature for async execution via `tokio::process::Command`:
 cmd-spec = { path = "crates/cmd-spec", features = ["tokio"] }
 ```
 
-## Built-in Step Handlers
+## Built-in Activity Handlers
 
 | Kind | Description |
 |------|-------------|
@@ -150,19 +150,19 @@ cmd-spec = { path = "crates/cmd-spec", features = ["tokio"] }
 | `echo` | Passes input through unchanged (useful for testing/chaining) |
 | `fixed_output` | Always emits the configured value as output, ignoring input |
 
-## Writing a Custom Step Handler
+## Writing a Custom Activity Handler
 
 ```rust
-use evented_worker::api::steps::{SyncStepHandler, StepConfig, StepInput};
+use evented_worker::api::activities::{SyncActivityHandler, ActivityConfig, ActivityInput};
 use serde_json::{json, Value};
 
-let handler = SyncStepHandler {
-    name: "my-step".to_string(),
-    id: "my-step".to_string(),
+let handler = SyncActivityHandler {
+    name: "my-activity".to_string(),
+    id: "my-activity".to_string(),
     description: "Does something useful".to_string(),
     validate_config: None,
     validate_input: None,
-    handler: |config: StepConfig, input: StepInput| -> Result<Value, Vec<String>> {
+    handler: |config: ActivityConfig, input: ActivityInput| -> Result<Value, Vec<String>> {
         // config.0 and input.0 are Option<serde_json::Value>
         Ok(json!({ "result": "done" }))
     },
@@ -181,11 +181,11 @@ cargo run --example update_readme
 
 ## Status
 
-Early-stage library. The core event-sourcing loop, synchronous step execution, and shell command integration are functional.
+Early-stage library. The core event-sourcing loop, synchronous activity execution, and shell command integration are functional.
 
 Known limitations:
 - **Events not persisted**: the controller holds state in memory only — a crash loses all progress
-- **Async step execution**: event types and state machine exist but processing is not yet implemented
+- **Async activity execution**: event types and state machine exist but processing is not yet implemented
 - **Validators ignored**: `validate_config`/`validate_input` on handlers are defined but never called
-- **Sequential scheduling only**: no DAG-based dependency model; steps run left-to-right
+- **Sequential scheduling only**: no DAG-based dependency model; activities run left-to-right
 - **No retry or compensation API**: failure is terminal (though the event log structure supports replay-based recovery)
