@@ -8,6 +8,7 @@ use evented_worker::runner::Controller;
 use evented_worker::view;
 
 fn main() {
+    pretty_env_logger::init();
     example_one();
 }
 // pub struct SyncActivityHandler {

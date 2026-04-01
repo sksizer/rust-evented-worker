@@ -2,6 +2,7 @@ mod add_activity;
 mod update_activity;
 mod update_graph;
 
+use log::trace;
 use crate::api::events::Event;
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
 use crate::api::activities::{Activity, ActivityCore, ActivityEvent, AsyncActivity, AsyncReady, SyncActivity, SyncNew};
@@ -10,6 +11,12 @@ use add_activity::append_activity_state;
 pub use crate::runner::execution::get_execution_status::get_execution_status;
 use update_activity::update;
 use update_graph::update_graph;
+
+
+pub struct ReduceState {
+    pub execution_state: DefaultExecutionState,
+    pub changed_activity: Option<Activity>,
+}
 
 /// Takes prior state + an event and returns an updated state
 pub fn reduce(execution_state: DefaultExecutionState, event: &Event) -> DefaultExecutionState {
@@ -82,6 +89,7 @@ fn reduce_activity(
             update_graph(state)
         }
         ActivityEvent::Failed(payload) => {
+            trace!("reduce:Activity failed: {:?}", payload);
             let failure = payload.reason.as_ref().map(|r| vec![r.clone()]);
             let new_activity = match execution_state.get_activity_state(&payload.id) {
                 Some(Activity::Sync(SyncActivity::Running(running))) => {
@@ -98,6 +106,7 @@ fn reduce_activity(
             update(execution_state, new_activity).unwrap()
         }
         ActivityEvent::Error(payload) => {
+            trace!("reduce:Activity error: {:?}", payload);
             let failure = payload.reason.as_ref().map(|r| vec![r.clone()]);
             let new_activity = match execution_state.get_activity_state(&payload.id) {
                 Some(Activity::Sync(SyncActivity::Running(running))) => {

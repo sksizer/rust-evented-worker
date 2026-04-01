@@ -17,19 +17,23 @@ pub fn event_stream(events: &EventStream) {
     for (i, event) in events.iter().enumerate() {
         match event {
             Event::Activity(activity_event) => {
-                let (icon, label, id) = match activity_event {
-                    ActivityEvent::AddSync(p) => ("⊕".white(), "AddSync".white(), p.id.as_str()),
-                    ActivityEvent::AddAsync(p) => ("⊕".cyan(), "AddAsync".cyan(), p.id.as_str()),
-                    ActivityEvent::Start(id) => ("▶".cyan(), "Start".cyan(), id.as_str()),
-                    ActivityEvent::Complete(p) => ("✔".green(), "Complete".green(), p.id.as_str()),
-                    ActivityEvent::Failed(p) => ("✘".red(), "Failed".red(), p.id.as_str()),
-                    ActivityEvent::Error(p) => ("⚠".yellow(), "Error".yellow(), p.id.as_str()),
+                let (icon, label) = match activity_event {
+                    ActivityEvent::AddSync(_)  => ("⊕".white(),  "Activity::AddSync".white()),
+                    ActivityEvent::AddAsync(_) => ("⊕".cyan(),   "Activity::AddAsync".cyan()),
+                    ActivityEvent::Start(_)    => ("▶".cyan(),   "Activity::Start".cyan()),
+                    ActivityEvent::Complete(_) => ("✔".green(),  "Activity::Complete".green()),
+                    ActivityEvent::Failed(_)   => ("✘".red(),    "Activity::Failed".red()),
+                    ActivityEvent::Error(_)    => ("⚠".yellow(), "Activity::Error".yellow()),
                 };
-                println!("  {} {:>2}. {} [{}]", icon, i + 1, label, id.dimmed());
+
+                println!("  {} {:>2}. {}", icon, i + 1, label);
+
+                let id = activity_event.activity_id();
+                println!("         {} {}", "id:".dimmed(), id.bold());
 
                 match activity_event {
                     ActivityEvent::AddSync(p) | ActivityEvent::AddAsync(p) => {
-                        println!("         {} {}", "kind:".dimmed(), p.kind);
+                        println!("         {} {}", "kind:".dimmed(), p.kind.bold());
                         if let Some(config) = &p.config {
                             println!(
                                 "         {} {}",
@@ -54,14 +58,14 @@ pub fn event_stream(events: &EventStream) {
                             );
                         }
                     }
-                    ActivityEvent::Failed(p) | ActivityEvent::Error(p) => {
+                    ActivityEvent::Failed(p) => {
                         if let Some(reason) = &p.reason {
-                            let colored_reason = if matches!(activity_event, ActivityEvent::Error(_)) {
-                                reason.as_str().yellow().to_string()
-                            } else {
-                                reason.as_str().red().to_string()
-                            };
-                            println!("         {} {}", "reason:".dimmed(), colored_reason);
+                            println!("         {} {}", "reason:".dimmed(), reason.as_str().red());
+                        }
+                    }
+                    ActivityEvent::Error(p) => {
+                        if let Some(reason) = &p.reason {
+                            println!("         {} {}", "reason:".dimmed(), reason.as_str().yellow());
                         }
                     }
                     ActivityEvent::Start(_) => {}
@@ -71,12 +75,12 @@ pub fn event_stream(events: &EventStream) {
                 match system_event {
                     SystemEvent::Error(data) => {
                         println!(
-                            "  {} {:>2}. {} [{}]",
+                            "  {} {:>2}. {}",
                             "⚠".yellow(),
                             i + 1,
-                            "SystemError".yellow(),
-                            data.activity_id.as_str().dimmed()
+                            "System::Error".yellow(),
                         );
+                        println!("         {} {}", "activity_id:".dimmed(), data.activity_id.bold());
                         println!("         {} {}", "source:".dimmed(), data.source);
                         if !data.errors.is_empty() {
                             println!(
@@ -88,12 +92,12 @@ pub fn event_stream(events: &EventStream) {
                     }
                     SystemEvent::NoProvider(kind) => {
                         println!(
-                            "  {} {:>2}. {} [{}]",
+                            "  {} {:>2}. {}",
                             "◌".yellow(),
                             i + 1,
-                            "NoProvider".yellow(),
-                            kind.as_str().dimmed()
+                            "System::NoProvider".yellow(),
                         );
+                        println!("         {} {}", "kind:".dimmed(), kind.bold());
                     }
                 }
             }
