@@ -39,6 +39,9 @@ mod tests {
             kind: "alpha".to_string(),
             config: None,
             depends_on: None,
+            attempt: 0,
+            failure_count: 0,
+            error_count: 0,
         }
     }
     #[test]

@@ -33,6 +33,7 @@ pub enum ActivityEvent {
     Complete(CompletePayload),
     Failed(FailurePayload),
     Error(FailurePayload),
+    Retry(ActivityId),
 }
 
 impl ActivityEvent {
@@ -83,6 +84,10 @@ impl ActivityEvent {
         })
     }
 
+    pub fn retry(id: impl Into<String>) -> Self {
+        ActivityEvent::Retry(id.into())
+    }
+
     pub fn activity_id(&self) -> &ActivityId {
         match self {
             ActivityEvent::AddSync(p) => &p.id,
@@ -91,6 +96,7 @@ impl ActivityEvent {
             ActivityEvent::Complete(p) => &p.id,
             ActivityEvent::Failed(p) => &p.id,
             ActivityEvent::Error(p) => &p.id,
+            ActivityEvent::Retry(id) => id,
         }
     }
 }

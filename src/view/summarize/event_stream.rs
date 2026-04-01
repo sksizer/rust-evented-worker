@@ -24,6 +24,7 @@ pub fn event_stream(events: &EventStream) {
                     ActivityEvent::Complete(_) => ("✔".green(),  "Activity::Complete".green()),
                     ActivityEvent::Failed(_)   => ("✘".red(),    "Activity::Failed".red()),
                     ActivityEvent::Error(_)    => ("⚠".yellow(), "Activity::Error".yellow()),
+                    ActivityEvent::Retry(_)    => ("↻".blue(),   "Activity::Retry".blue()),
                 };
 
                 println!("  {} {:>2}. {}", icon, i + 1, label);
@@ -68,7 +69,7 @@ pub fn event_stream(events: &EventStream) {
                             println!("         {} {}", "reason:".dimmed(), reason.as_str().yellow());
                         }
                     }
-                    ActivityEvent::Start(_) => {}
+                    ActivityEvent::Start(_) | ActivityEvent::Retry(_) => {}
                 }
             }
             Event::System(system_event) => {

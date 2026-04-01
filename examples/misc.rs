@@ -1,4 +1,5 @@
 use cmd_spec::ShellCommand;
+use evented_worker::api::activities::ActivityEvent;
 use evented_worker::api::events::{Event, EventStream};
 use evented_worker::fixtures::get_registry;
 use evented_worker::fixtures::get_test_activity_modules;
@@ -23,8 +24,9 @@ fn main() {
     let mut execution_state = runner::restore(&event_stream);
     view::summarize::execution_state(&execution_state);
 
-    // Activity 1: schedule (produces an ActivityEvent), reduce it, then process and reduce the result
-    let activity_event = runner::scheduler(&execution_state).unwrap();
+    // Activity 1: schedule, create start event, reduce it, then process and reduce the result
+    let activity_id = runner::scheduler(&execution_state).unwrap();
+    let activity_event = ActivityEvent::start(activity_id);
     let start_event = Event::from(activity_event.clone());
     execution_state = runner::reduce(execution_state, &start_event);
     let result_event = runner::process(&execution_state, &registry, &activity_event);
@@ -33,7 +35,8 @@ fn main() {
 
     // Activity 2
     execution_state = runner::reduce(execution_state, &Event::add_sync("2", "echo", None, None));
-    let activity_event = runner::scheduler(&execution_state).unwrap();
+    let activity_id = runner::scheduler(&execution_state).unwrap();
+    let activity_event = ActivityEvent::start(activity_id);
     let start_event = Event::from(activity_event.clone());
     execution_state = runner::reduce(execution_state, &start_event);
     let result_event = runner::process(&execution_state, &registry, &activity_event);

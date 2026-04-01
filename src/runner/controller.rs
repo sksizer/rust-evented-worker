@@ -7,6 +7,7 @@ use crate::api::events::{Event, EventStream};
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
 use crate::runner::registry::Registry;
 use crate::runner::{process, reduce, restore, scheduler};
+use crate::runner::policy::apply_policy;
 pub use get_prior_output::resolve_prior_output;
 use std::cell::RefCell;
 use std::rc::Rc;
@@ -35,7 +36,7 @@ impl Controller {
             let Some(activity_id) = scheduler(&execution_state) else {
                 break;
             };
-            let activity_event = ActivityEvent::start(activity_id);
+            let activity_event = ActivityEvent::start(activity_id.clone());
             // We record the request to start or continue the event in the event log.
             // TODO - is this necessary or just basically logging noise?
             let start_event = Event::from(activity_event.clone());
@@ -50,16 +51,12 @@ impl Controller {
 
             execution_state = reduce(execution_state, &result_event);
 
-            // REACT TO EVENT - like error?
-            // Move this to a reduce function
-            // let new_event = match result_event {
-            //     Event::Activity(ActivityEvent::Error(payload)) => {
-            //     },
-            //     Event::Activity(ActivityEvent::Failed(payload)) => {
-            //     },
-            //     _ => {}
-            // }
-            // THEN GET EVENT, log it and let loop continue
+            // Check retry policy for the activity that just ran
+            if let Some(retry_event) = apply_policy(&execution_state, &activity_id) {
+                let event = Event::from(retry_event);
+                self.event_log.borrow_mut().push(event.clone());
+                execution_state = reduce(execution_state, &event);
+            }
         }
         execution_state
     }

@@ -35,6 +35,9 @@ mod tests {
             kind: kind.to_string(),
             config: None,
             depends_on: None,
+            attempt: 0,
+            failure_count: 0,
+            error_count: 0,
         };
         Activity::from(SyncActivity::from(SyncNew::new(core).make_ready(None)))
     }
@@ -55,6 +58,9 @@ mod tests {
             kind: kind.to_string(),
             config: None,
             depends_on: Some(depends_on),
+            attempt: 0,
+            failure_count: 0,
+            error_count: 0,
         };
         Activity::from(SyncActivity::from(SyncNew::new(core)))
     }

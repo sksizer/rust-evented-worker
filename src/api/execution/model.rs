@@ -20,7 +20,7 @@ pub trait ExecutionState {
 
 
     // POLICIES
-    fn retry_count(&self) -> usize;
+    fn max_retries(&self) -> u32;
 }
 
 pub(crate) enum ExecutionGraphRelation {
@@ -30,6 +30,7 @@ pub(crate) enum ExecutionGraphRelation {
 pub struct DefaultExecutionState {
     pub(crate) activity_to_graph_map: HashMap<ActivityId, Activity>,
     pub(crate) activity_graph: Graph<ActivityId, ExecutionGraphRelation>,
+    pub(crate) max_retries: u32,
 }
 
 impl DefaultExecutionState {
@@ -42,6 +43,7 @@ impl DefaultExecutionState {
         DefaultExecutionState {
             activity_to_graph_map: activity_map,
             activity_graph: Graph::new(),
+            max_retries: 3,
         }
     }
 }
@@ -52,6 +54,7 @@ impl ExecutionState for DefaultExecutionState {
         DefaultExecutionState {
             activity_to_graph_map: HashMap::new(),
             activity_graph: Graph::new(),
+            max_retries: 3,
         }
     }
     fn status(&self) -> ExecutionStatus {
@@ -81,8 +84,8 @@ impl ExecutionState for DefaultExecutionState {
         vec![]
     }
 
-    fn retry_count(&self) -> usize {
-        3
+    fn max_retries(&self) -> u32 {
+        self.max_retries
     }
 }
 
