@@ -1,5 +1,4 @@
 mod add_activity;
-mod get_execution_status;
 mod update_activity;
 mod update_graph;
 
@@ -8,7 +7,7 @@ use crate::api::execution::{DefaultExecutionState, ExecutionState};
 use crate::api::activities::{Activity, ActivityCore, ActivityEvent, AsyncActivity, AsyncReady, SyncActivity, SyncNew};
 
 use add_activity::append_activity_state;
-pub use get_execution_status::get_execution_status;
+pub use crate::runner::execution::get_execution_status::get_execution_status;
 use update_activity::update;
 use update_graph::update_graph;
 

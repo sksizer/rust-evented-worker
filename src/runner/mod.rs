@@ -4,6 +4,7 @@ mod reduce;
 mod registry;
 mod restore;
 mod scheduler;
+pub(crate) mod execution;
 
 pub use controller::Controller;
 pub use controller::resolve_prior_output;

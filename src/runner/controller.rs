@@ -30,13 +30,19 @@ impl Controller {
     pub fn start(&mut self) -> DefaultExecutionState {
         let mut execution_state = restore(&self.event_log.borrow());
         loop {
+            // TODO - get a start or continue event from the scheduler for a particular activity
             let Some(activity_event) = scheduler(&execution_state) else {
                 break;
             };
+            // We record the request to start or continue the event in the event log.
+            // TODO - is this necessary or just basically logging noise?
             let start_event = Event::from(activity_event.clone());
             self.event_log.borrow_mut().push(start_event.clone());
             execution_state = reduce(execution_state, &start_event);
 
+            // TODO - rename process to execute or run_activity perhaps?
+            // TODO - add ability to get partially finished activity
+            // TODO - add ability to get commands from processing an event - such as spawning child event
             let result_event = process(&execution_state, &self.registry, &activity_event);
             self.event_log.borrow_mut().push(result_event.clone());
             execution_state = reduce(execution_state, &result_event);
