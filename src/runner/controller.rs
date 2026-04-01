@@ -2,6 +2,7 @@
 
 mod get_prior_output;
 
+use crate::api::activities::ActivityEvent;
 use crate::api::events::{Event, EventStream};
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
 use crate::runner::registry::Registry;
@@ -9,7 +10,6 @@ use crate::runner::{process, reduce, restore, scheduler};
 pub use get_prior_output::resolve_prior_output;
 use std::cell::RefCell;
 use std::rc::Rc;
-use crate::api::activities::ActivityEvent;
 
 pub struct Controller {
     registry: Registry,
@@ -32,9 +32,10 @@ impl Controller {
         let mut execution_state = restore(&self.event_log.borrow());
         loop {
             // TODO - get a start or continue event from the scheduler for a particular activity
-            let Some(activity_event) = scheduler(&execution_state) else {
+            let Some(activity_id) = scheduler(&execution_state) else {
                 break;
             };
+            let activity_event = ActivityEvent::start(activity_id);
             // We record the request to start or continue the event in the event log.
             // TODO - is this necessary or just basically logging noise?
             let start_event = Event::from(activity_event.clone());
