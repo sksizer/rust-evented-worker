@@ -1,0 +1,12 @@
+name: rust-evented-worker
+root: .
+windows:
+  - primary:
+      layout: main-vertical
+      panes:
+        - claude:
+            - "claude"
+        - nuxt:
+            - "cd ."
+        - tauri:
+            - "cd ."
