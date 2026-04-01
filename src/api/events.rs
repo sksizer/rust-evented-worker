@@ -1,5 +1,5 @@
 //! Models event sources
-use crate::api::activities::{ActivityEvent, ActivityId};
+use crate::api::activities::{ActivityEvent, ActivityId, ActivityKind};
 use serde_json::Value;
 
 // --- System events ---
@@ -14,6 +14,8 @@ pub struct SystemErrorData {
 #[derive(Clone, Eq, PartialEq, Debug)]
 pub enum SystemEvent {
     Error(SystemErrorData),
+    /// Activity was encountered but no provider registered to handle it
+    NoProvider(ActivityKind)
 }
 
 // --- Wrapper enum ---
@@ -26,8 +28,12 @@ pub enum Event {
 
 impl Event {
     // Convenience constructors that produce Event::Activity variants
-    pub fn add_sync(id: impl Into<String>, kind: impl Into<String>, config: Option<Value>) -> Self {
-        Event::Activity(ActivityEvent::add_sync(id, kind, config))
+    pub fn add_sync(
+        id: impl Into<String>,
+        kind: impl Into<String>,
+        config: Option<Value>,
+        depends_on: Option<Vec<String>>) -> Self {
+        Event::Activity(ActivityEvent::add_sync(id, kind, config, depends_on))
     }
 
     pub fn add_async(
@@ -78,8 +84,8 @@ mod tests {
     use super::*;
     #[test]
     fn test_add_sync() {
-        let event = Event::add_sync("1", "echo", None);
-        assert_eq!(event, Event::add_sync("1", "echo", None));
+        let event = Event::add_sync("1", "echo", None, None);
+        assert_eq!(event, Event::add_sync("1", "echo", None, None));
     }
 
     #[test]

@@ -13,18 +13,13 @@ pub fn append_activity_state(
         return Err(ExecutionStateError::DuplicateActivityIdError);
     }
 
-    if !execution_state.activity_states.is_empty() {
-        let prior_id =
-            execution_state.activity_states[execution_state.activity_states.len() - 1]
-                .id()
-                .to_string();
-        if prior_id == activity.id() {
+    if let Some(last) = execution_state.activities().last() {
+        if last.id() == activity.id() {
             return Err(ExecutionStateError::DuplicateActivityIdError);
         }
     }
 
-    // If empty activity list
-    execution_state.activity_states.push(activity);
+    execution_state.push_activity(activity);
     Ok(execution_state)
 }
 
@@ -38,15 +33,16 @@ mod tests {
             id: id.to_string(),
             kind: kind.to_string(),
             config: None,
+            depends_on: None,
         };
         Activity::from(SyncActivity::from(SyncNew::new(core).make_ready(None)))
     }
 
     #[test]
     fn append_activity_state_with_duplicate_id_error() {
-        let execution_state = DefaultExecutionState {
-            activity_states: vec![make_ready_activity("1", "alpha")],
-        };
+        let execution_state = DefaultExecutionState::new(
+            Some(vec![make_ready_activity("1", "alpha")]));
+
         let result =
             append_activity_state(execution_state, make_ready_activity("1", "beta"));
         assert!(result.is_err());

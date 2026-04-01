@@ -19,12 +19,12 @@ pub fn execution_state(execution_state: &DefaultExecutionState) {
     println!("{} {}", "Execution Status:".bold(), colored_status.bold());
     println!("{}", "─".repeat(REPEAT));
 
-    if execution_state.activity_states.is_empty() {
+    if execution_state.activity_count() == 0 {
         println!("  {}", "(no activities)".dimmed());
         return;
     }
 
-    for (i, activity) in execution_state.activity_states.iter().enumerate() {
+    for (i, activity) in execution_state.activities().enumerate() {
         let (icon, status_label) = match activity {
             Activity::Sync(SyncActivity::New(_)) => ("◌".white(), "New".white()),
             Activity::Sync(SyncActivity::Ready(_)) => ("○".white(), "Ready".white()),

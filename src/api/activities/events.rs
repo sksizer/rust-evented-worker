@@ -1,4 +1,4 @@
-use crate::api::activities::{ActivityId, ActivityKind};
+use crate::api::activities::{Activity, ActivityId, ActivityKind};
 use serde_json::Value;
 
 // --- Payloads ---
@@ -8,6 +8,7 @@ pub struct AddActivityPayload {
     pub id: ActivityId,
     pub kind: ActivityKind,
     pub config: Option<Value>,
+    pub depends_on: Option<Vec<ActivityId>>,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug)]
@@ -35,11 +36,12 @@ pub enum ActivityEvent {
 }
 
 impl ActivityEvent {
-    pub fn add_sync(id: impl Into<String>, kind: impl Into<String>, config: Option<Value>) -> Self {
+    pub fn add_sync(id: impl Into<String>, kind: impl Into<String>, config: Option<Value>, depends_on: Option<Vec<ActivityId>>) -> Self {
         ActivityEvent::AddSync(AddActivityPayload {
             id: id.into(),
             kind: kind.into(),
             config,
+            depends_on,
         })
     }
 
@@ -52,6 +54,7 @@ impl ActivityEvent {
             id: id.into(),
             kind: kind.into(),
             config,
+            depends_on: None,
         })
     }
 

@@ -31,6 +31,7 @@ fn reduce_activity(
                 id: payload.id.clone(),
                 kind: payload.kind.clone(),
                 config: payload.config.clone(),
+                depends_on: None,
             };
             let activity = Activity::from(SyncActivity::from(SyncNew::new(core).make_ready(None)));
             append_activity_state(execution_state, activity).unwrap()
@@ -40,6 +41,7 @@ fn reduce_activity(
                 id: payload.id.clone(),
                 kind: payload.kind.clone(),
                 config: payload.config.clone(),
+                depends_on: None,
             };
             let activity = Activity::from(AsyncActivity::from(AsyncReady::new(core)));
             append_activity_state(execution_state, activity).unwrap()
