@@ -82,7 +82,7 @@ mod test {
             Some(json!({ "message": "hello" })),
             None
         )]));
-        let mut controller = Controller::new(Registry::new(None, None), event_log);
+        let mut controller = Controller::new(Registry::new(), event_log);
         controller.start();
     }
 }

@@ -1,9 +1,10 @@
 //! Solely responsible for calling an activity function
 use crate::api::events::{Event, SystemErrorData};
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
-use crate::api::activities::{ActivityConfig, ActivityEvent, ActivityInput};
+use crate::api::activities::ActivityEvent;
 use crate::runner::registry::Registry;
 use log::{error, trace};
+use serde_json::Value;
 
 /// Knows how to call an activity function. Is at the edge of side effects.
 /// Takes an ActivityEvent (what happened), returns an Event (which may be activity or system).
@@ -17,14 +18,16 @@ pub fn process(
     match activity_event {
         ActivityEvent::Start(activity_id) => {
             let activity = state.get_activity_state(activity_id).unwrap();
-            let Some(handler) = registry.get_sync_module(&activity.kind()) else {
+            let kind = activity.kind();
+
+            let Some(module) = registry.get_module(&kind) else {
                 return Event::error(id, Some("Could not find activity module".to_string()));
             };
-            let config = ActivityConfig(activity.config().cloned());
-            let input = ActivityInput(activity.input().cloned());
 
-            // CALL HANDLER
-            match (handler.handler)(config,input) {
+            let config = activity.config().cloned().unwrap_or(Value::Null);
+            let input = activity.input().cloned().unwrap_or(Value::Null);
+
+            match (module.execute)(&config, &input) {
                 Ok(result) => Event::complete(activity_id.to_string(), Some(result)),
                 Err(errors) => Event::error(activity_id.to_string(), Some(errors.join(","))),
             }
@@ -35,11 +38,6 @@ pub fn process(
             source: "processor::process".to_string(),
         }),
     }
-}
-
-fn invariant_violation(id: &str, message: &str) -> Event {
-    error!("Executor invariant violation {} {}", id, message);
-    Event::error(id.to_string(), Some(message.to_string()))
 }
 
 #[cfg(test)]

@@ -2,7 +2,6 @@ use cmd_spec::ShellCommand;
 use evented_worker::api::activities::ActivityEvent;
 use evented_worker::api::events::{Event, EventStream};
 use evented_worker::fixtures::get_registry;
-use evented_worker::fixtures::get_test_activity_modules;
 use evented_worker::runner::Controller;
 use evented_worker::runner::Registry;
 use evented_worker::activities::shell::{ActivityParameters, get_activity};
@@ -14,7 +13,7 @@ use std::rc::Rc;
 
 fn main() {
     pretty_env_logger::init();
-    let registry = Registry::new(Some(get_test_activity_modules()), None);
+    let registry = get_registry();
     let event_stream: EventStream = vec![Event::add_sync(
         "1",
         "echo",

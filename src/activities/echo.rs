@@ -1,34 +1,18 @@
-//! This is a test activity module that basically just passes the input through to output
+//! Echo activity — passes input through to output
 
-use crate::api::activities::{ActivityConfig, ActivityError, ActivityInput, SyncActivityHandler};
+use crate::api::activities::ModuleDef;
 use log::trace;
 use serde_json::Value;
 
-static NAME: &str = "echo";
-
-fn validate_config(_: Option<Value>) -> Result<(), ActivityError> {
-    Ok(())
-}
-fn validate_input(_: Option<Value>) -> Result<(), String> {
-    Ok(())
-}
-
-fn echo_handler(_config: ActivityConfig, input: ActivityInput) -> Result<Value, Vec<String>> {
-    trace!("Echo Module - input: {:?}", input.0);
-    Ok(input.0.unwrap_or(Value::Null))
-}
-
-// TODO - implement actual echoing for testing
-pub fn get_echo_module() -> SyncActivityHandler {
-    SyncActivityHandler {
-        name: "Synchronous Echo Activity".to_string(),
-        id: NAME.to_string(),
-        description: "Passes input to output synchronously".to_string(),
-        validate_config: Some(validate_config),
-        validate_input: Some(validate_input),
-        handler: echo_handler,
-    }
-}
+pub static ECHO: ModuleDef<Value, Value, Value> = ModuleDef {
+    id: "echo",
+    validate_config: |_| true,
+    validate_input: |_| true,
+    execute: |_config, input| {
+        trace!("Echo Module - input: {:?}", input);
+        Ok(input.clone())
+    },
+};
 
 #[cfg(test)]
 mod tests {
@@ -37,17 +21,14 @@ mod tests {
 
     #[test]
     fn passes_input_through_to_output() {
-        let module = get_echo_module();
         let input = json!({ "message": "hello" });
-        let output =
-            (module.handler)(ActivityConfig(None), ActivityInput(Some(input.clone())));
+        let output = (ECHO.execute)(&Value::Null, &input);
         assert_eq!(output.unwrap(), input);
     }
 
     #[test]
-    fn none_input_returns_null() {
-        let module = get_echo_module();
-        let output = (module.handler)(ActivityConfig(None), ActivityInput(None));
+    fn null_input_returns_null() {
+        let output = (ECHO.execute)(&Value::Null, &Value::Null);
         assert_eq!(output.unwrap(), Value::Null);
     }
 }
