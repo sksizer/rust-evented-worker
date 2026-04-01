@@ -21,8 +21,7 @@ mod test {
         let event_stream = vec![Event::add_sync("1", "alpha", None, None)];
         let execution_state = restore(&event_stream);
         assert_eq!(execution_state.activity_count(), 1);
-        let activities: Vec<&Activity> = execution_state.activities().collect();
-        assert_eq!(activities[0].id(), "1");
+        assert!(execution_state.get_activity_state("1").is_some());
     }
 
     #[test]
@@ -45,12 +44,10 @@ mod test {
         ];
         let execution_state = restore(&event_stream);
         assert_eq!(execution_state.activity_count(), 1);
-        let activities: Vec<&Activity> = execution_state.activities().collect();
         assert!(matches!(
-            activities[0],
-            Activity::Sync(SyncActivity::Completed(_))
+            execution_state.get_activity_state("1"),
+            Some(Activity::Sync(SyncActivity::Completed(_)))
         ));
-        assert_eq!(activities[0].id(), "1");
     }
 
     #[test]
@@ -65,14 +62,13 @@ mod test {
         ];
         let execution_state = restore(&event_stream);
         assert_eq!(execution_state.activity_count(), 2);
-        let activities: Vec<&Activity> = execution_state.activities().collect();
         assert!(matches!(
-            activities[0],
-            Activity::Sync(SyncActivity::Completed(_))
+            execution_state.get_activity_state("1"),
+            Some(Activity::Sync(SyncActivity::Completed(_)))
         ));
         assert!(matches!(
-            activities[1],
-            Activity::Sync(SyncActivity::Completed(_))
+            execution_state.get_activity_state("2"),
+            Some(Activity::Sync(SyncActivity::Completed(_)))
         ));
     }
 
@@ -85,24 +81,23 @@ mod test {
             Event::add_sync("2", "beta", None, Some(vec!["1".into()])),
             Event::start("2"),
             Event::complete("2", None),
-            Event::add_sync("3", "gamma", None, Some(vec!["2".into(), "3".into()])),
+            Event::add_sync("3", "gamma", None, Some(vec!["1".into(), "2".into()])),
             Event::start("3"),
             Event::failed("3", Some("something went wrong".into())),
         ];
         let execution_state = restore(&event_stream);
         assert_eq!(execution_state.activity_count(), 3);
-        let activities: Vec<&Activity> = execution_state.activities().collect();
         assert!(matches!(
-            activities[0],
-            Activity::Sync(SyncActivity::Completed(_))
+            execution_state.get_activity_state("1"),
+            Some(Activity::Sync(SyncActivity::Completed(_)))
         ));
         assert!(matches!(
-            activities[1],
-            Activity::Sync(SyncActivity::Completed(_))
+            execution_state.get_activity_state("2"),
+            Some(Activity::Sync(SyncActivity::Completed(_)))
         ));
         assert!(matches!(
-            activities[2],
-            Activity::Sync(SyncActivity::Failed(_))
+            execution_state.get_activity_state("3"),
+            Some(Activity::Sync(SyncActivity::Failed(_)))
         ));
 
         assert_eq!(execution_state.status(), ExecutionStatus::Failed);
@@ -113,10 +108,9 @@ mod test {
         let event_stream = vec![Event::add_async("1", "fetch", None), Event::start("1")];
         let execution_state = restore(&event_stream);
         assert_eq!(execution_state.activity_count(), 1);
-        let activities: Vec<&Activity> = execution_state.activities().collect();
         assert!(matches!(
-            activities[0],
-            Activity::Async(AsyncActivity::Running(_))
+            execution_state.get_activity_state("1"),
+            Some(Activity::Async(AsyncActivity::Running(_)))
         ));
     }
 }

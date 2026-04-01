@@ -18,6 +18,7 @@ fn main() {
         "1",
         "echo",
         Some(json!({ "config": "echo" })),
+        None
     )];
     let mut execution_state = runner::restore(&event_stream);
     view::summarize::execution_state(&execution_state);
@@ -31,7 +32,7 @@ fn main() {
     view::summarize::execution_state(&execution_state);
 
     // Activity 2
-    execution_state = runner::reduce(execution_state, &Event::add_sync("2", "echo", None));
+    execution_state = runner::reduce(execution_state, &Event::add_sync("2", "echo", None, None));
     let activity_event = runner::scheduler(&execution_state).unwrap();
     let start_event = Event::from(activity_event.clone());
     execution_state = runner::reduce(execution_state, &start_event);
@@ -46,9 +47,9 @@ fn main() {
 fn example_one() {
     trace!("Example 1");
     let event_log = Rc::new(RefCell::new(vec![
-        Event::add_sync("0", "fixed_output", Some(json!({ "config": "DATA" }))),
-        Event::add_sync("1", "echo", None),
-        Event::add_sync("2", "echo", None),
+        Event::add_sync("0", "fixed_output", Some(json!({ "config": "DATA" })), None),
+        Event::add_sync("1", "echo", None, None),
+        Event::add_sync("2", "echo", None, None),
     ]));
 
     let mut controller = Controller::new(get_registry(), event_log);
@@ -65,7 +66,7 @@ fn example_two() {
                 commands: vec![ShellCommand::new("ls")],
             },
         ),
-        Event::add_sync("echo", "echo", None),
+        Event::add_sync("echo", "echo", None, None),
     ]));
 
     let mut controller = Controller::new(get_registry(), event_log.clone());

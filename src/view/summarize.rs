@@ -27,6 +27,7 @@ pub fn execution_state(execution_state: &DefaultExecutionState) {
     for (i, activity) in execution_state.activities().enumerate() {
         let (icon, status_label) = match activity {
             Activity::Sync(SyncActivity::New(_)) => ("◌".white(), "New".white()),
+            Activity::Sync(SyncActivity::UnfulfilledDependencies(_)) => ("◇".white(), "Waiting".white()),
             Activity::Sync(SyncActivity::Ready(_)) => ("○".white(), "Ready".white()),
             Activity::Sync(SyncActivity::Running(_)) => ("●".cyan(), "Running".cyan()),
             Activity::Sync(SyncActivity::Completed(_)) => ("✔".green(), "Completed".green()),
