@@ -63,6 +63,7 @@ mod test {
             "1",
             "echo",
             Some(json!({ "message": "hello" })),
+            None
         )]));
         let mut controller = Controller::new(Registry::new(None, None), event_log);
         controller.start();

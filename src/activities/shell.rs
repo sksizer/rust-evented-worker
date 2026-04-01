@@ -69,5 +69,6 @@ pub fn get_activity(id: &str, activity_parameters: ActivityParameters) -> Event 
         id,
         NAME,
         Some(json!({ "commands": activity_parameters.commands })),
+        None
     )
 }

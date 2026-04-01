@@ -1,26 +1,23 @@
-use crate::api::execution::{DefaultExecutionState, ExecutionStatus};
+use crate::api::execution::{DefaultExecutionState, ExecutionState, ExecutionStatus};
 
 pub fn get_execution_status(execution_state: &DefaultExecutionState) -> ExecutionStatus {
-    if execution_state.activity_states.is_empty() {
+    if execution_state.activity_count() == 0 {
         return ExecutionStatus::New;
     }
     if execution_state
-        .activity_states
-        .iter()
+        .activities()
         .all(|s| s.is_completed())
     {
         return ExecutionStatus::Finished;
     }
     if execution_state
-        .activity_states
-        .iter()
+        .activities()
         .any(|s| s.is_failed())
     {
         return ExecutionStatus::Failed;
     }
     if execution_state
-        .activity_states
-        .iter()
+        .activities()
         .any(|s| s.is_error())
     {
         return ExecutionStatus::Error;
@@ -34,9 +31,7 @@ mod test {
 
     #[test]
     fn test_execution_status() {
-        let execution_state = DefaultExecutionState {
-            activity_states: vec![],
-        };
+        let execution_state = DefaultExecutionState::new(None);
         assert_eq!(execution_state.status(), ExecutionStatus::New);
     }
 }

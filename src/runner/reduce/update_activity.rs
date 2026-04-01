@@ -6,7 +6,7 @@ pub(super) fn update(
     mut execution_state: DefaultExecutionState,
     activity: Activity,
 ) -> Result<DefaultExecutionState, ExecutionStateError> {
-    if execution_state.activity_states.is_empty() {
+    if execution_state.activity_count() == 0 {
         error!("Attempt to transition an activity on an empty execution_state activity list");
         return Err(ExecutionStateError::InvalidActivityTransition);
     }
@@ -15,19 +15,11 @@ pub(super) fn update(
         return Err(ExecutionStateError::TransitionOnClosedExecutionState);
     }
 
-    match execution_state
-        .activity_states
-        .iter_mut()
-        .find(|s| s.id() == activity.id())
-    {
-        Some(existing) => {
-            *existing = activity; // replace in place
-            Ok(execution_state)
-        }
-        None => {
-            error!("Attempt to transition an activity that does not exist");
-            Err(ExecutionStateError::InvalidActivityTransition)
-        }
+    if execution_state.replace_activity(activity) {
+        Ok(execution_state)
+    } else {
+        error!("Attempt to transition an activity that does not exist");
+        Err(ExecutionStateError::InvalidActivityTransition)
     }
 }
 
@@ -44,6 +36,7 @@ mod tests {
             id: id.to_string(),
             kind: "alpha".to_string(),
             config: None,
+            depends_on: None,
         }
     }
     #[test]
@@ -58,9 +51,9 @@ mod tests {
                 output: None,
             },
         };
-        let execution_state = DefaultExecutionState {
-            activity_states: vec![Activity::from(SyncActivity::from(completed))],
-        };
+        let execution_state = DefaultExecutionState::new(
+            Some(vec![Activity::from(SyncActivity::from(completed))]));
+
 
         let ready = SyncNew::new(sync_core("1")).make_ready(None);
         let result = update(
