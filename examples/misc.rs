@@ -72,5 +72,5 @@ fn example_two() {
     let mut controller = Controller::new(get_registry(), event_log.clone());
     let execution_state = controller.start();
     view::summarize::execution_state(&execution_state);
-    trace!("Recorded events: {:?}", event_log.borrow());
+    view::summarize::event_stream(&event_log.borrow());
 }

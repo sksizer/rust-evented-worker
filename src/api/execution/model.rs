@@ -17,6 +17,10 @@ pub trait ExecutionState {
     fn activity_count(&self) -> usize;
 
     fn activity_dependents(&self, id:ActivityId) -> Vec<&Activity>;
+
+
+    // POLICIES
+    fn retry_count(&self) -> usize;
 }
 
 pub(crate) enum ExecutionGraphRelation {
@@ -75,6 +79,10 @@ impl ExecutionState for DefaultExecutionState {
 
     fn activity_dependents(&self, id:ActivityId) -> Vec<&Activity> {
         vec![]
+    }
+
+    fn retry_count(&self) -> usize {
+        3
     }
 }
 

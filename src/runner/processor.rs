@@ -22,8 +22,12 @@ pub fn process(
             };
             let config = ActivityConfig(activity.config().cloned());
             let input = ActivityInput(activity.input().cloned());
-            let result = (handler.handler)(config, input);
-            Event::complete(activity_id.to_string(), Some(result.unwrap()))
+
+            // CALL HANDLER
+            match (handler.handler)(config,input) {
+                Ok(result) => Event::complete(activity_id.to_string(), Some(result)),
+                Err(errors) => Event::error(activity_id.to_string(), Some(errors.join(","))),
+            }
         }
         _ => Event::system_error(SystemErrorData {
             activity_id: id,
