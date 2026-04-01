@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use petgraph::Graph;
 use crate::api::activities::{Activity, ActivityId};
 use crate::runner::get_execution_status;
@@ -14,45 +15,39 @@ pub trait ExecutionState {
     fn get_activity_state(&self, id: &str) -> Option<&Activity>;
     fn activities(&self) -> impl Iterator<Item = &Activity>;
     fn activity_count(&self) -> usize;
+
+    fn activity_dependents(&self, id:ActivityId) -> Vec<&Activity>;
 }
 
-enum ExecutionGraphEdge {
-    DependsOn
+pub(crate) enum ExecutionGraphRelation {
+    Precedes
 }
 
 pub struct DefaultExecutionState {
-    activity_graph: Graph<ActivityId, ExecutionGraphEdge>,
-    activity_states: Vec<Activity>,
+    pub(crate) activity_to_graph_map: HashMap<ActivityId, Activity>,
+    pub(crate) activity_graph: Graph<ActivityId, ExecutionGraphRelation>,
 }
 
 impl DefaultExecutionState {
     pub fn new(activity_states: Option<Vec<Activity>>) -> Self {
+        let activities = activity_states.unwrap_or_default();
+        let activity_map = activities
+            .into_iter()
+            .map(|a| (a.id().to_string(), a))
+            .collect();
         DefaultExecutionState {
-            activity_states: activity_states.unwrap_or_default(),
+            activity_to_graph_map: activity_map,
             activity_graph: Graph::new(),
-        }
-    }
-
-    pub(crate) fn push_activity(&mut self, activity: Activity) {
-        self.activity_states.push(activity);
-    }
-
-    pub(crate) fn replace_activity(&mut self, activity: Activity) -> bool {
-        match self.activity_states.iter_mut().find(|s| s.id() == activity.id()) {
-            Some(existing) => {
-                *existing = activity;
-                true
-            }
-            None => false,
         }
     }
 }
 
+/// Side-effect create functions can go on the trait implementation for convenience
 impl ExecutionState for DefaultExecutionState {
     fn new() -> DefaultExecutionState {
         DefaultExecutionState {
+            activity_to_graph_map: HashMap::new(),
             activity_graph: Graph::new(),
-            activity_states: vec![],
         }
     }
     fn status(&self) -> ExecutionStatus {
@@ -67,15 +62,19 @@ impl ExecutionState for DefaultExecutionState {
     }
 
     fn get_activity_state(&self, id: &str) -> Option<&Activity> {
-        self.activity_states.iter().find(|s| s.id() == id)
+        self.activity_to_graph_map.get(id)
     }
 
     fn activities(&self) -> impl Iterator<Item = &Activity> {
-        self.activity_states.iter()
+        self.activity_to_graph_map.values()
     }
 
     fn activity_count(&self) -> usize {
-        self.activity_states.len()
+        self.activity_to_graph_map.len()
+    }
+
+    fn activity_dependents(&self, id:ActivityId) -> Vec<&Activity> {
+        vec![]
     }
 }
 
@@ -92,6 +91,9 @@ pub enum ExecutionStateError {
 
     #[error("Invalid activity transition on closed activity")]
     InvalidActivityTransitionOnClosedActivity,
+
+    #[error("Activity depends on itself")]
+    SelfReferentialDependency,
 }
 
 #[derive(Debug, PartialEq)]
@@ -107,7 +109,7 @@ pub enum ExecutionStatus {
 mod tests {
     use super::*;
     #[test]
-    fn test_parents() {
-
+    fn activity_dependents() {
+        let empty_execution_state = DefaultExecutionState::new(None);
     }
 }

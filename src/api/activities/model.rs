@@ -220,6 +220,7 @@ impl AsyncRunning {
 #[derive(Clone, Debug)]
 pub enum SyncActivity {
     New(SyncNew),
+    UnfulfilledDependencies(SyncNew),
     Ready(SyncReady),
     Running(SyncRunning),
     Completed(SyncCompleted),
@@ -229,6 +230,7 @@ pub enum SyncActivity {
 
 #[derive(Clone, Debug)]
 pub enum AsyncActivity {
+    // UnfulfilledDependencies(), TODO
     Ready(AsyncReady),
     Running(AsyncRunning),
     Completed(AsyncCompleted),
@@ -323,6 +325,7 @@ impl ActivityState for SyncActivity {
     fn core(&self) -> &ActivityCore {
         match self {
             SyncActivity::New(s) => s.core(),
+            SyncActivity::UnfulfilledDependencies(s) => s.core(),
             SyncActivity::Ready(s) => s.core(),
             SyncActivity::Running(s) => s.core(),
             SyncActivity::Completed(s) => s.core(),
@@ -333,6 +336,7 @@ impl ActivityState for SyncActivity {
     fn input(&self) -> Option<&Value> {
         match self {
             SyncActivity::New(s) => s.input(),
+            SyncActivity::UnfulfilledDependencies(s) => s.input(),
             SyncActivity::Ready(s) => s.input(),
             SyncActivity::Running(s) => s.input(),
             SyncActivity::Completed(s) => s.input(),

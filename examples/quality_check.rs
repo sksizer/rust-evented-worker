@@ -20,10 +20,10 @@ fn quality_check() -> EventStream {
 }
 
 fn run_quality_check() {
-    let registyr = get_registry();
+    let registry = get_registry();
     let event_stream = quality_check();
     let event_log = Rc::new(RefCell::new(event_stream));
-    let mut controller = Controller::new(registyr, event_log);
+    let mut controller = Controller::new(registry, event_log);
     let execution_state = controller.start();
     summarize::execution_state(&execution_state);
 }

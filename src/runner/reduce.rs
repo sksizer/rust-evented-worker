@@ -1,14 +1,16 @@
 mod add_activity;
 mod get_execution_status;
 mod update_activity;
+mod update_graph;
 
 use crate::api::events::Event;
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
-use crate::api::activities::{AsyncReady, AsyncActivity, Activity, ActivityCore, ActivityEvent, SyncNew, SyncActivity};
+use crate::api::activities::{Activity, ActivityCore, ActivityEvent, AsyncActivity, AsyncReady, SyncActivity, SyncNew};
 
 use add_activity::append_activity_state;
 pub use get_execution_status::get_execution_status;
 use update_activity::update;
+use update_graph::update_graph;
 
 /// Takes prior state + an event and returns an updated state
 pub fn reduce(execution_state: DefaultExecutionState, event: &Event) -> DefaultExecutionState {
@@ -31,20 +33,22 @@ fn reduce_activity(
                 id: payload.id.clone(),
                 kind: payload.kind.clone(),
                 config: payload.config.clone(),
-                depends_on: None,
+                depends_on: payload.depends_on.clone(),
             };
-            let activity = Activity::from(SyncActivity::from(SyncNew::new(core).make_ready(None)));
-            append_activity_state(execution_state, activity).unwrap()
+            let activity = Activity::from(SyncActivity::from(SyncNew::new(core)));
+            let state = append_activity_state(execution_state, activity).unwrap();
+            update_graph(state)
         }
         ActivityEvent::AddAsync(payload) => {
             let core = ActivityCore {
                 id: payload.id.clone(),
                 kind: payload.kind.clone(),
                 config: payload.config.clone(),
-                depends_on: None,
+                depends_on: payload.depends_on.clone(),
             };
             let activity = Activity::from(AsyncActivity::from(AsyncReady::new(core)));
-            append_activity_state(execution_state, activity).unwrap()
+            let state = append_activity_state(execution_state, activity).unwrap();
+            update_graph(state)
         }
         ActivityEvent::Start(id) => {
             let new_activity = match execution_state.get_activity_state(id) {
@@ -75,7 +79,8 @@ fn reduce_activity(
                     payload.id
                 ),
             };
-            update(execution_state, new_activity).unwrap()
+            let state = update(execution_state, new_activity).unwrap();
+            update_graph(state)
         }
         ActivityEvent::Failed(payload) => {
             let failure = payload.reason.as_ref().map(|r| vec![r.clone()]);

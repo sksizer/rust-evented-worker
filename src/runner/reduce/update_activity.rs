@@ -15,7 +15,9 @@ pub(super) fn update(
         return Err(ExecutionStateError::TransitionOnClosedExecutionState);
     }
 
-    if execution_state.replace_activity(activity) {
+    let id = activity.id().to_string();
+    if execution_state.activity_to_graph_map.contains_key(&id) {
+        execution_state.activity_to_graph_map.insert(id, activity);
         Ok(execution_state)
     } else {
         error!("Attempt to transition an activity that does not exist");
