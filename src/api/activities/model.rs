@@ -409,7 +409,8 @@ impl Activity {
         matches!(
             self,
             Activity::Sync(SyncActivity::Ready(_))
-                | Activity::Async(AsyncActivity::Ready(_) | AsyncActivity::Running(_))
+                | Activity::Async(AsyncActivity::Ready(_)
+                | AsyncActivity::Running(_))
         )
     }
 
