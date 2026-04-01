@@ -9,6 +9,7 @@ use crate::runner::{process, reduce, restore, scheduler};
 pub use get_prior_output::resolve_prior_output;
 use std::cell::RefCell;
 use std::rc::Rc;
+use crate::api::activities::ActivityEvent;
 
 pub struct Controller {
     registry: Registry,
@@ -45,7 +46,19 @@ impl Controller {
             // TODO - add ability to get commands from processing an event - such as spawning child event
             let result_event = process(&execution_state, &self.registry, &activity_event);
             self.event_log.borrow_mut().push(result_event.clone());
+
             execution_state = reduce(execution_state, &result_event);
+
+            // REACT TO EVENT - like error?
+            // Move this to a reduce function
+            // let new_event = match result_event {
+            //     Event::Activity(ActivityEvent::Error(payload)) => {
+            //     },
+            //     Event::Activity(ActivityEvent::Failed(payload)) => {
+            //     },
+            //     _ => {}
+            // }
+            // THEN GET EVENT, log it and let loop continue
         }
         execution_state
     }
