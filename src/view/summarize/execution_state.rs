@@ -61,6 +61,17 @@ pub fn execution_state(execution_state: &DefaultExecutionState) {
             println!("      {} {}", "input:".dimmed(), input);
         }
 
+        let core = activity.core();
+        if core.attempt > 0 || core.failure_count > 0 || core.error_count > 0 {
+            println!(
+                "      {} attempt: {}, failures: {}, errors: {}",
+                "retries:".dimmed(),
+                core.attempt,
+                core.failure_count,
+                core.error_count,
+            );
+        }
+
         match activity {
             Activity::Sync(SyncActivity::Completed(sc)) => {
                 if let Some(output) = &sc.completed.output {

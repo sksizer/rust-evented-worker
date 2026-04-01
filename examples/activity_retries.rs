@@ -42,6 +42,7 @@ fn example_one() {
 
     let event_log = Rc::new(RefCell::new(vec![
         Event::add_sync("0", "error", Some(json!({ "config": "DATA" })), None),
+        Event::add_sync("1", "error", Some(json!({ "config": "DATA" })), Some(vec!["0".to_string()])),
     ]));
 
     let mut controller = Controller::new(registry, event_log.clone());
