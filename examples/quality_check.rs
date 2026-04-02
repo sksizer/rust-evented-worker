@@ -1,11 +1,10 @@
 use cmd_spec::ShellCommand;
+use evented_worker::InMemoryEventStore;
+use evented_worker::activities::shell::{ActivityParameters, get_activity};
 use evented_worker::api::events::EventStream;
 use evented_worker::fixtures::get_registry;
 use evented_worker::runner::Controller;
-use evented_worker::activities::shell::{ActivityParameters, get_activity};
 use evented_worker::view::summarize;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 fn quality_check() -> EventStream {
     vec![get_activity(
@@ -22,8 +21,8 @@ fn quality_check() -> EventStream {
 fn run_quality_check() {
     let registry = get_registry();
     let event_stream = quality_check();
-    let event_log = Rc::new(RefCell::new(event_stream));
-    let mut controller = Controller::new(registry, event_log);
+    let mut store = InMemoryEventStore::from_events(event_stream);
+    let mut controller = Controller::new(registry, &mut store);
     let execution_state = controller.start();
     summarize::execution_state(&execution_state);
 }

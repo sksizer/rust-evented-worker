@@ -1,15 +1,15 @@
 use cmd_spec::ShellCommand;
+use evented_worker::InMemoryEventStore;
+use evented_worker::activities::shell::{ActivityParameters, get_activity};
+use evented_worker::api::EventStore;
 use evented_worker::api::activities::ActivityEvent;
 use evented_worker::api::events::{Event, EventStream};
 use evented_worker::fixtures::get_registry;
 use evented_worker::runner::Controller;
 use evented_worker::runner::Registry;
-use evented_worker::activities::shell::{ActivityParameters, get_activity};
 use evented_worker::{runner, view};
 use log::trace;
 use serde_json::json;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 fn main() {
     pretty_env_logger::init();
@@ -18,7 +18,7 @@ fn main() {
         "1",
         "echo",
         Some(json!({ "config": "echo" })),
-        None
+        None,
     )];
     let mut execution_state = runner::restore(&event_stream);
     view::summarize::execution_state(&execution_state);
@@ -48,20 +48,20 @@ fn main() {
 
 fn example_one() {
     trace!("Example 1");
-    let event_log = Rc::new(RefCell::new(vec![
+    let mut store = InMemoryEventStore::from_events(vec![
         Event::add_sync("0", "fixed_output", Some(json!({ "config": "DATA" })), None),
         Event::add_sync("1", "echo", None, None),
         Event::add_sync("2", "echo", None, None),
-    ]));
+    ]);
 
-    let mut controller = Controller::new(get_registry(), event_log);
+    let mut controller = Controller::new(get_registry(), &mut store);
     let execution_state = controller.start();
     view::summarize::execution_state(&execution_state);
 }
 
 fn example_two() {
     trace!("Example 2");
-    let event_log = Rc::new(RefCell::new(vec![
+    let mut store = InMemoryEventStore::from_events(vec![
         get_activity(
             "0",
             ActivityParameters {
@@ -69,10 +69,10 @@ fn example_two() {
             },
         ),
         Event::add_sync("echo", "echo", None, None),
-    ]));
+    ]);
 
-    let mut controller = Controller::new(get_registry(), event_log.clone());
+    let mut controller = Controller::new(get_registry(), &mut store);
     let execution_state = controller.start();
     view::summarize::execution_state(&execution_state);
-    view::summarize::event_stream(&event_log.borrow());
+    view::summarize::event_stream(&store.get_events());
 }

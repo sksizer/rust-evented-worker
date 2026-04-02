@@ -1,14 +1,21 @@
 use std::marker::PhantomData;
 
 pub struct New;
-pub struct Attempted { pub count: u8 }
-pub struct Complete { pub evidence: Vec<SpecEvidence> }
-pub struct Failed { pub attempts: u8, pub messages: Vec<String> }
+pub struct Attempted {
+    pub count: u8,
+}
+pub struct Complete {
+    pub evidence: Vec<SpecEvidence>,
+}
+pub struct Failed {
+    pub attempts: u8,
+    pub messages: Vec<String>,
+}
 
 pub struct SpecEvidence {
     pub file_path: String,
     // Describe how the specification was met with aforementioned evidence
-    pub description: String
+    pub description: String,
 }
 
 // The state is a generic parameter, not a field
@@ -29,7 +36,12 @@ impl<S> Specification<S> {
 // Methods only available when state is New
 impl Specification<New> {
     pub fn create(work_item_id: String, id: String, body: String) -> Self {
-        Specification { work_item_id, id, body, state: New }
+        Specification {
+            work_item_id,
+            id,
+            body,
+            state: New,
+        }
     }
 
     // Transitions: New -> Complete or New -> Attempted
@@ -73,7 +85,10 @@ impl Specification<Attempted> {
             work_item_id: self.work_item_id,
             id: self.id,
             body: self.body,
-            state: Failed { attempts: self.state.count, messages },
+            state: Failed {
+                attempts: self.state.count,
+                messages,
+            },
         }
     }
 }

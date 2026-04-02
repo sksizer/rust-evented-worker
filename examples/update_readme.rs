@@ -1,17 +1,14 @@
 use cmd_spec::ShellCommand;
-use evented_worker::api::events::Event;
+use evented_worker::InMemoryEventStore;
+use evented_worker::activities::shell::{ActivityParameters, get_activity};
 use evented_worker::fixtures::get_registry;
 use evented_worker::runner::Controller;
-use evented_worker::activities::shell::{ActivityParameters, get_activity};
 use evented_worker::view;
 use log::trace;
-use serde_json::json;
-use std::cell::RefCell;
-use std::rc::Rc;
 
 fn main() {
     trace!("Example 3: Update Readme");
-    let event_log = Rc::new(RefCell::new(vec![
+    let mut store = InMemoryEventStore::from_events(vec![
         get_activity(
             "0",
             ActivityParameters {
@@ -37,8 +34,8 @@ fn main() {
                 commands: vec![ShellCommand::new("git_commit_message").args(vec!["-a"])],
             },
         ),
-    ]));
-    let mut controller = Controller::new(get_registry(), event_log.clone());
+    ]);
+    let mut controller = Controller::new(get_registry(), &mut store);
     let execution_state = controller.start();
     view::summarize::execution_state(&execution_state);
 }

@@ -2,35 +2,36 @@
 
 mod get_prior_output;
 
+use crate::api::EventStore;
 use crate::api::activities::ActivityEvent;
-use crate::api::events::{Event, EventStream};
+use crate::api::events::Event;
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
+use crate::runner::policy::apply_policy;
 use crate::runner::registry::Registry;
 use crate::runner::{process, reduce, restore, scheduler};
-use crate::runner::policy::apply_policy;
 pub use get_prior_output::resolve_prior_output;
-use std::cell::RefCell;
-use std::rc::Rc;
 
-pub struct Controller {
+// The lifetime of the event_store must exceed the controller since
+// the controller is borrowing a ref to it hence the lifetime parameter
+pub struct Controller<'a> {
     registry: Registry,
-    event_log: Rc<RefCell<EventStream>>,
+    event_store: &'a mut dyn EventStore,
     loop_fn: Vec<LoopFn>,
     event_handlers: Vec<EventHandlerFn>,
 }
 
-impl Controller {
-    pub fn new(registry: Registry, event_log: Rc<RefCell<EventStream>>) -> Controller {
+impl<'a> Controller<'a> {
+    pub fn new(registry: Registry, event_store: &'a mut dyn EventStore) -> Controller<'a> {
         Controller {
             registry,
-            event_log,
+            event_store,
             loop_fn: vec![],
             event_handlers: vec![],
         }
     }
 
     pub fn start(&mut self) -> DefaultExecutionState {
-        let mut execution_state = restore(&self.event_log.borrow());
+        let mut execution_state = restore(&self.event_store.get_events());
         loop {
             // TODO - get a start or continue event from the scheduler for a particular activity
             let Some(activity_id) = scheduler(&execution_state) else {
@@ -40,21 +41,21 @@ impl Controller {
             // We record the request to start or continue the event in the event log.
             // TODO - is this necessary or just basically logging noise?
             let start_event = Event::from(activity_event.clone());
-            self.event_log.borrow_mut().push(start_event.clone());
+            self.event_store.persist(start_event.clone()).unwrap();
             execution_state = reduce(execution_state, &start_event);
 
             // TODO - rename process to execute or run_activity perhaps?
             // TODO - add ability to get partially finished activity
             // TODO - add ability to get commands from processing an event - such as spawning child event
             let result_event = process(&execution_state, &self.registry, &activity_event);
-            self.event_log.borrow_mut().push(result_event.clone());
+            self.event_store.persist(result_event.clone()).unwrap();
 
             execution_state = reduce(execution_state, &result_event);
 
             // Check retry policy for the activity that just ran
             if let Some(retry_event) = apply_policy(&execution_state, &activity_id) {
                 let event = Event::from(retry_event);
-                self.event_log.borrow_mut().push(event.clone());
+                self.event_store.persist(event.clone()).unwrap();
                 execution_state = reduce(execution_state, &event);
             }
         }
@@ -68,21 +69,20 @@ type EventHandlerFn = Box<dyn FnMut(&Event)>;
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::InMemoryEventStore;
     use crate::api::events::Event;
     use crate::runner::registry::Registry;
     use serde_json::json;
-    use std::cell::RefCell;
-    use std::rc::Rc;
 
     #[test]
     fn test_controller_start() {
-        let event_log = Rc::new(RefCell::new(vec![Event::add_sync(
+        let mut store = InMemoryEventStore::from_events(vec![Event::add_sync(
             "1",
             "echo",
             Some(json!({ "message": "hello" })),
-            None
-        )]));
-        let mut controller = Controller::new(Registry::new(), event_log);
+            None,
+        )]);
+        let mut controller = Controller::new(Registry::new(), &mut store);
         controller.start();
     }
 }

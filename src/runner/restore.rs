@@ -12,9 +12,9 @@ pub fn restore(event_stream: &EventStream) -> DefaultExecutionState {
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::api::activities::{Activity, AsyncActivity, SyncActivity};
     use crate::api::events::Event;
     use crate::api::execution::{ExecutionState, ExecutionStatus};
-    use crate::api::activities::{AsyncActivity, Activity, SyncActivity};
 
     #[test]
     fn test_adding_a_single_activity() {

@@ -1,5 +1,5 @@
+use crate::api::activities::{Activity, AsyncActivity, SyncActivity};
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
-use crate::api::activities::{AsyncActivity, Activity, SyncActivity};
 use serde_json::Value;
 
 /// Returns the output of the first dependency of the given activity.

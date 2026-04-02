@@ -1,14 +1,16 @@
+use crate::api::activities::{Activity, AsyncActivity, SyncActivity};
 use crate::api::execution::{DefaultExecutionState, ExecutionState, ExecutionStatus};
-use crate::api::activities::{AsyncActivity, Activity, SyncActivity};
+use crate::view::summarize::REPEAT;
 use colored::{ColoredString, Colorize};
 use petgraph::Direction;
 use petgraph::graph::NodeIndex;
-use crate::view::summarize::REPEAT;
 
 fn activity_icon(activity: &Activity) -> (ColoredString, ColoredString) {
     match activity {
         Activity::Sync(SyncActivity::New(_)) => ("◌".white(), "New".white()),
-        Activity::Sync(SyncActivity::UnfulfilledDependencies(_)) => ("◇".white(), "Waiting".white()),
+        Activity::Sync(SyncActivity::UnfulfilledDependencies(_)) => {
+            ("◇".white(), "Waiting".white())
+        }
         Activity::Sync(SyncActivity::Ready(_)) => ("○".white(), "Ready".white()),
         Activity::Sync(SyncActivity::Running(_)) => ("●".cyan(), "Running".cyan()),
         Activity::Sync(SyncActivity::Completed(_)) => ("✔".green(), "Completed".green()),
@@ -158,7 +160,10 @@ fn show_dependency_graph(execution_state: &DefaultExecutionState) {
     println!("{}", "─".repeat(REPEAT));
 
     let Ok(topo_order) = petgraph::algo::toposort(graph, None) else {
-        println!("  {}", "(cycle detected — graph cannot be displayed)".yellow());
+        println!(
+            "  {}",
+            "(cycle detected — graph cannot be displayed)".yellow()
+        );
         return;
     };
 

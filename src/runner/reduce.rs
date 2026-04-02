@@ -2,16 +2,18 @@ mod add_activity;
 mod update_activity;
 mod update_graph;
 
-use log::trace;
+use crate::api::activities::{
+    Activity, ActivityCore, ActivityEvent, AsyncActivity, AsyncReady, SyncActivity, SyncNew,
+    SyncReady,
+};
 use crate::api::events::Event;
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
-use crate::api::activities::{Activity, ActivityCore, ActivityEvent, AsyncActivity, AsyncReady, SyncActivity, SyncNew, SyncReady};
+use log::trace;
 
-use add_activity::append_activity_state;
 pub use crate::runner::execution::get_execution_status::get_execution_status;
+use add_activity::append_activity_state;
 use update_activity::update;
 use update_graph::update_graph;
-
 
 pub struct ReduceState {
     pub execution_state: DefaultExecutionState,
@@ -76,20 +78,13 @@ fn reduce_activity(
         }
         ActivityEvent::Complete(payload) => {
             let new_activity = match execution_state.get_activity_state(&payload.id) {
-                Some(Activity::Sync(SyncActivity::Running(running))) => {
-                    Activity::from(SyncActivity::from(
-                        running.clone().complete(payload.output.clone()),
-                    ))
-                }
-                Some(Activity::Async(AsyncActivity::Running(running))) => {
-                    Activity::from(AsyncActivity::from(
-                        running.clone().complete(payload.output.clone()),
-                    ))
-                }
-                _ => panic!(
-                    "Invalid activity state for Complete event: {}",
-                    payload.id
+                Some(Activity::Sync(SyncActivity::Running(running))) => Activity::from(
+                    SyncActivity::from(running.clone().complete(payload.output.clone())),
                 ),
+                Some(Activity::Async(AsyncActivity::Running(running))) => Activity::from(
+                    AsyncActivity::from(running.clone().complete(payload.output.clone())),
+                ),
+                _ => panic!("Invalid activity state for Complete event: {}", payload.id),
             };
             let state = update(execution_state, new_activity).unwrap();
             update_graph(state)
@@ -108,10 +103,7 @@ fn reduce_activity(
                     running.core.failure_count += 1;
                     Activity::from(AsyncActivity::from(running.fail(failure)))
                 }
-                _ => panic!(
-                    "Invalid activity state for Failed event: {}",
-                    payload.id
-                ),
+                _ => panic!("Invalid activity state for Failed event: {}", payload.id),
             };
             update(execution_state, new_activity).unwrap()
         }
@@ -129,10 +121,7 @@ fn reduce_activity(
                     running.core.error_count += 1;
                     Activity::from(AsyncActivity::from(running.error(failure)))
                 }
-                _ => panic!(
-                    "Invalid activity state for Error event: {}",
-                    payload.id
-                ),
+                _ => panic!("Invalid activity state for Error event: {}", payload.id),
             };
             update(execution_state, new_activity).unwrap()
         }

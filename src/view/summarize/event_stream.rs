@@ -1,11 +1,15 @@
-use crate::api::events::{Event, EventStream, SystemEvent};
 use crate::api::activities::ActivityEvent;
-use colored::Colorize;
+use crate::api::events::{Event, EventStream, SystemEvent};
 use crate::view::summarize::REPEAT;
+use colored::Colorize;
 
 pub fn event_stream(events: &EventStream) {
     println!("{}", "─".repeat(REPEAT));
-    println!("{} {}", "Event Stream:".bold(), format!("({} events)", events.len()).dimmed());
+    println!(
+        "{} {}",
+        "Event Stream:".bold(),
+        format!("({} events)", events.len()).dimmed()
+    );
     println!("{}", "─".repeat(REPEAT));
 
     if events.is_empty() {
@@ -18,13 +22,13 @@ pub fn event_stream(events: &EventStream) {
         match event {
             Event::Activity(activity_event) => {
                 let (icon, label) = match activity_event {
-                    ActivityEvent::AddSync(_)  => ("⊕".white(),  "Activity::AddSync".white()),
-                    ActivityEvent::AddAsync(_) => ("⊕".cyan(),   "Activity::AddAsync".cyan()),
-                    ActivityEvent::Start(_)    => ("▶".cyan(),   "Activity::Start".cyan()),
-                    ActivityEvent::Complete(_) => ("✔".green(),  "Activity::Complete".green()),
-                    ActivityEvent::Failed(_)   => ("✘".red(),    "Activity::Failed".red()),
-                    ActivityEvent::Error(_)    => ("⚠".yellow(), "Activity::Error".yellow()),
-                    ActivityEvent::Retry(_)    => ("↻".blue(),   "Activity::Retry".blue()),
+                    ActivityEvent::AddSync(_) => ("⊕".white(), "Activity::AddSync".white()),
+                    ActivityEvent::AddAsync(_) => ("⊕".cyan(), "Activity::AddAsync".cyan()),
+                    ActivityEvent::Start(_) => ("▶".cyan(), "Activity::Start".cyan()),
+                    ActivityEvent::Complete(_) => ("✔".green(), "Activity::Complete".green()),
+                    ActivityEvent::Failed(_) => ("✘".red(), "Activity::Failed".red()),
+                    ActivityEvent::Error(_) => ("⚠".yellow(), "Activity::Error".yellow()),
+                    ActivityEvent::Retry(_) => ("↻".blue(), "Activity::Retry".blue()),
                 };
 
                 println!("  {} {:>2}. {}", icon, i + 1, label);
@@ -66,42 +70,48 @@ pub fn event_stream(events: &EventStream) {
                     }
                     ActivityEvent::Error(p) => {
                         if let Some(reason) = &p.reason {
-                            println!("         {} {}", "reason:".dimmed(), reason.as_str().yellow());
+                            println!(
+                                "         {} {}",
+                                "reason:".dimmed(),
+                                reason.as_str().yellow()
+                            );
                         }
                     }
                     ActivityEvent::Start(_) | ActivityEvent::Retry(_) => {}
                 }
             }
-            Event::System(system_event) => {
-                match system_event {
-                    SystemEvent::Error(data) => {
+            Event::System(system_event) => match system_event {
+                SystemEvent::Error(data) => {
+                    println!(
+                        "  {} {:>2}. {}",
+                        "⚠".yellow(),
+                        i + 1,
+                        "System::Error".yellow(),
+                    );
+                    println!(
+                        "         {} {}",
+                        "activity_id:".dimmed(),
+                        data.activity_id.bold()
+                    );
+                    println!("         {} {}", "source:".dimmed(), data.source);
+                    if !data.errors.is_empty() {
                         println!(
-                            "  {} {:>2}. {}",
-                            "⚠".yellow(),
-                            i + 1,
-                            "System::Error".yellow(),
+                            "         {} {}",
+                            "errors:".dimmed(),
+                            data.errors.join("; ").yellow()
                         );
-                        println!("         {} {}", "activity_id:".dimmed(), data.activity_id.bold());
-                        println!("         {} {}", "source:".dimmed(), data.source);
-                        if !data.errors.is_empty() {
-                            println!(
-                                "         {} {}",
-                                "errors:".dimmed(),
-                                data.errors.join("; ").yellow()
-                            );
-                        }
-                    }
-                    SystemEvent::NoProvider(kind) => {
-                        println!(
-                            "  {} {:>2}. {}",
-                            "◌".yellow(),
-                            i + 1,
-                            "System::NoProvider".yellow(),
-                        );
-                        println!("         {} {}", "kind:".dimmed(), kind.bold());
                     }
                 }
-            }
+                SystemEvent::NoProvider(kind) => {
+                    println!(
+                        "  {} {:>2}. {}",
+                        "◌".yellow(),
+                        i + 1,
+                        "System::NoProvider".yellow(),
+                    );
+                    println!("         {} {}", "kind:".dimmed(), kind.bold());
+                }
+            },
         }
     }
 

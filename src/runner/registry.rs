@@ -20,8 +20,6 @@ impl Registry {
     }
 
     pub fn get_module(&self, activity_kind: &str) -> Option<&SerdeModule> {
-        self.modules
-            .iter()
-            .find(|m| m.id == activity_kind)
+        self.modules.iter().find(|m| m.id == activity_kind)
     }
 }

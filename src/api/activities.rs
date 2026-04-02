@@ -6,10 +6,10 @@ mod model;
 
 pub use core::{ActivityCore, ActivityId, ActivityKind};
 pub use errors::ActivityError;
-pub use events::{CompletePayload, FailurePayload, ActivityEvent};
-pub use handlers::{SerdeModule, ModuleDef};
+pub use events::{ActivityEvent, CompletePayload, FailurePayload};
+pub use handlers::{ModuleDef, SerdeModule};
 pub use model::{
-    AsyncCompleted, AsyncError, AsyncFailed, AsyncReady, AsyncRunning, AsyncActivity,
-    CompletedActivity, FailedActivity, Failure, RanActivity, Activity, ActivityState, SyncCompleted,
-    SyncError, SyncFailed, SyncNew, SyncReady, SyncRunning, SyncActivity,
+    Activity, ActivityState, AsyncActivity, AsyncCompleted, AsyncError, AsyncFailed, AsyncReady,
+    AsyncRunning, CompletedActivity, FailedActivity, Failure, RanActivity, SyncActivity,
+    SyncCompleted, SyncError, SyncFailed, SyncNew, SyncReady, SyncRunning,
 };

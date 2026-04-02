@@ -37,7 +37,12 @@ pub enum ActivityEvent {
 }
 
 impl ActivityEvent {
-    pub fn add_sync(id: impl Into<String>, kind: impl Into<String>, config: Option<Value>, depends_on: Option<Vec<ActivityId>>) -> Self {
+    pub fn add_sync(
+        id: impl Into<String>,
+        kind: impl Into<String>,
+        config: Option<Value>,
+        depends_on: Option<Vec<ActivityId>>,
+    ) -> Self {
         ActivityEvent::AddSync(AddActivityPayload {
             id: id.into(),
             kind: kind.into(),

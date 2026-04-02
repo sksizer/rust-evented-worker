@@ -15,7 +15,7 @@ pub struct SystemErrorData {
 pub enum SystemEvent {
     Error(SystemErrorData),
     /// Activity was encountered but no provider registered to handle it
-    NoProvider(ActivityKind)
+    NoProvider(ActivityKind),
 }
 
 // --- Wrapper enum ---
@@ -32,7 +32,8 @@ impl Event {
         id: impl Into<String>,
         kind: impl Into<String>,
         config: Option<Value>,
-        depends_on: Option<Vec<String>>) -> Self {
+        depends_on: Option<Vec<String>>,
+    ) -> Self {
         Event::Activity(ActivityEvent::add_sync(id, kind, config, depends_on))
     }
 

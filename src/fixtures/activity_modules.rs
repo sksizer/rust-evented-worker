@@ -1,6 +1,6 @@
+use crate::activities::{echo, fixed_output, shell};
 use crate::api::activities::SerdeModule;
 use crate::serde_module;
-use crate::activities::{echo, fixed_output, shell};
 
 pub fn get_test_serde_modules() -> Vec<SerdeModule> {
     vec![

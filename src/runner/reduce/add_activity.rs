@@ -1,14 +1,11 @@
-use crate::api::execution::{DefaultExecutionState, ExecutionState, ExecutionStateError};
 use crate::api::activities::{Activity, SyncActivity, SyncNew};
+use crate::api::execution::{DefaultExecutionState, ExecutionState, ExecutionStateError};
 
 pub fn append_activity_state(
     mut execution_state: DefaultExecutionState,
     activity: Activity,
 ) -> Result<DefaultExecutionState, ExecutionStateError> {
-    if execution_state
-        .get_activity_state(activity.id())
-        .is_some()
-    {
+    if execution_state.get_activity_state(activity.id()).is_some() {
         return Err(ExecutionStateError::DuplicateActivityIdError);
     }
 
@@ -44,11 +41,10 @@ mod tests {
 
     #[test]
     fn append_activity_state_with_duplicate_id_error() {
-        let execution_state = DefaultExecutionState::new(
-            Some(vec![make_ready_activity("1", "alpha")]));
+        let execution_state =
+            DefaultExecutionState::new(Some(vec![make_ready_activity("1", "alpha")]));
 
-        let result =
-            append_activity_state(execution_state, make_ready_activity("1", "beta"));
+        let result = append_activity_state(execution_state, make_ready_activity("1", "beta"));
         assert!(result.is_err());
     }
 
@@ -67,8 +63,8 @@ mod tests {
 
     #[test]
     fn append_activity_state_with_dependents() {
-        let execution_state = DefaultExecutionState::new(
-            Some(vec![make_ready_activity("1", "alpha")]));
+        let execution_state =
+            DefaultExecutionState::new(Some(vec![make_ready_activity("1", "alpha")]));
         let activity = make_new_activity_with_deps("2", "beta", vec!["1".into()]);
         let result = append_activity_state(execution_state, activity);
         assert!(result.is_ok());

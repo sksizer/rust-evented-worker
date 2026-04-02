@@ -1,7 +1,7 @@
-use std::collections::HashMap;
-use petgraph::Graph;
 use crate::api::activities::{Activity, ActivityId};
 use crate::runner::get_execution_status;
+use petgraph::Graph;
+use std::collections::HashMap;
 use thiserror::Error;
 
 pub trait ExecutionState {
@@ -16,15 +16,14 @@ pub trait ExecutionState {
     fn activities(&self) -> impl Iterator<Item = &Activity>;
     fn activity_count(&self) -> usize;
 
-    fn activity_dependents(&self, id:ActivityId) -> Vec<&Activity>;
-
+    fn activity_dependents(&self, id: ActivityId) -> Vec<&Activity>;
 
     // POLICIES
     fn max_retries(&self) -> u32;
 }
 
 pub(crate) enum ExecutionGraphRelation {
-    Precedes
+    Precedes,
 }
 
 pub struct DefaultExecutionState {
@@ -80,7 +79,7 @@ impl ExecutionState for DefaultExecutionState {
         self.activity_to_graph_map.len()
     }
 
-    fn activity_dependents(&self, id:ActivityId) -> Vec<&Activity> {
+    fn activity_dependents(&self, id: ActivityId) -> Vec<&Activity> {
         vec![]
     }
 

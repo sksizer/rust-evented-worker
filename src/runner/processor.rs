@@ -1,7 +1,7 @@
 //! Solely responsible for calling an activity function
+use crate::api::activities::ActivityEvent;
 use crate::api::events::{Event, SystemErrorData};
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
-use crate::api::activities::ActivityEvent;
 use crate::runner::registry::Registry;
 use log::{error, trace};
 use serde_json::Value;

@@ -1,4 +1,4 @@
 pub struct WorkItem {
     id: String,
-    context: String
+    context: String,
 }

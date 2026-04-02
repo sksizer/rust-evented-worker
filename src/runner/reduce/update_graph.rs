@@ -1,11 +1,13 @@
-use std::collections::HashMap;
-use petgraph::Graph;
 use crate::api::activities::{Activity, ActivityId, SyncActivity, SyncNew};
 use crate::api::execution::{DefaultExecutionState, ExecutionGraphRelation};
+use petgraph::Graph;
+use std::collections::HashMap;
 
 /// Rebuilds the execution graph from the current activity_map and re-evaluates
 /// readiness for activities whose dependencies may have changed.
-pub(in crate::runner::reduce) fn update_graph(mut execution_state: DefaultExecutionState) -> DefaultExecutionState {
+pub(in crate::runner::reduce) fn update_graph(
+    mut execution_state: DefaultExecutionState,
+) -> DefaultExecutionState {
     // 1. Rebuild graph from scratch — it's derived state from activity_map
 
     let mut graph = Graph::new();
@@ -34,7 +36,11 @@ pub(in crate::runner::reduce) fn update_graph(mut execution_state: DefaultExecut
     execution_state.activity_graph = graph;
 
     // 2. Re-evaluate readiness for activities that aren't running or terminal
-    let ids_to_check: Vec<ActivityId> = execution_state.activity_to_graph_map.keys().cloned().collect();
+    let ids_to_check: Vec<ActivityId> = execution_state
+        .activity_to_graph_map
+        .keys()
+        .cloned()
+        .collect();
 
     for id in ids_to_check {
         let activity = &execution_state.activity_to_graph_map[&id];
@@ -43,8 +49,8 @@ pub(in crate::runner::reduce) fn update_graph(mut execution_state: DefaultExecut
             activity,
             Activity::Sync(
                 SyncActivity::New(_)
-                | SyncActivity::UnfulfilledDependencies(_)
-                | SyncActivity::Ready(_)
+                    | SyncActivity::UnfulfilledDependencies(_)
+                    | SyncActivity::Ready(_)
             )
         );
         if !should_evaluate {
@@ -69,7 +75,9 @@ pub(in crate::runner::reduce) fn update_graph(mut execution_state: DefaultExecut
             Activity::from(SyncActivity::UnfulfilledDependencies(SyncNew::new(core)))
         };
 
-        execution_state.activity_to_graph_map.insert(id, new_activity);
+        execution_state
+            .activity_to_graph_map
+            .insert(id, new_activity);
     }
 
     execution_state

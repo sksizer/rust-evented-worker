@@ -1,5 +1,5 @@
-use crate::api::execution::{DefaultExecutionState, ExecutionState, ExecutionStateError};
 use crate::api::activities::Activity;
+use crate::api::execution::{DefaultExecutionState, ExecutionState, ExecutionStateError};
 use log::error;
 
 pub(super) fn update(
@@ -29,7 +29,7 @@ pub(super) fn update(
 mod tests {
     use super::*;
     use crate::api::activities::{
-        CompletedActivity, RanActivity, ActivityCore, SyncCompleted, SyncNew, SyncActivity,
+        ActivityCore, CompletedActivity, RanActivity, SyncActivity, SyncCompleted, SyncNew,
     };
     use chrono::Utc;
 
@@ -56,15 +56,11 @@ mod tests {
                 output: None,
             },
         };
-        let execution_state = DefaultExecutionState::new(
-            Some(vec![Activity::from(SyncActivity::from(completed))]));
-
+        let execution_state =
+            DefaultExecutionState::new(Some(vec![Activity::from(SyncActivity::from(completed))]));
 
         let ready = SyncNew::new(sync_core("1")).make_ready(None);
-        let result = update(
-            execution_state,
-            Activity::from(SyncActivity::from(ready)),
-        );
+        let result = update(execution_state, Activity::from(SyncActivity::from(ready)));
         assert!(result.is_err());
     }
 }

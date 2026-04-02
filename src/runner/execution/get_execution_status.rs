@@ -4,22 +4,13 @@ pub fn get_execution_status(execution_state: &DefaultExecutionState) -> Executio
     if execution_state.activity_count() == 0 {
         return ExecutionStatus::New;
     }
-    if execution_state
-        .activities()
-        .all(|s| s.is_completed())
-    {
+    if execution_state.activities().all(|s| s.is_completed()) {
         return ExecutionStatus::Finished;
     }
-    if execution_state
-        .activities()
-        .any(|s| s.is_failed())
-    {
+    if execution_state.activities().any(|s| s.is_failed()) {
         return ExecutionStatus::Failed;
     }
-    if execution_state
-        .activities()
-        .any(|s| s.is_error())
-    {
+    if execution_state.activities().any(|s| s.is_error()) {
         return ExecutionStatus::Error;
     }
     ExecutionStatus::Running
