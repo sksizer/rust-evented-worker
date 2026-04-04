@@ -23,17 +23,17 @@ crates/cmd-spec/    # Serializable shell command builder
 
 ### Controller (high-level)
 
-Define an event log with your activities, hand it to a `Controller`, and call `start()`:
+Create an `EventStore`, populate it with your initial activities, hand it to a `Controller`, and call `start()`. The controller borrows the store for the duration of execution — after `start()` returns, you can inspect the full event log directly:
 
 ```rust
 use evented_worker::runner::Controller;
 use evented_worker::fixtures::get_registry;
 use evented_worker::activities::shell::{ActivityParameters, get_activity};
+use evented_worker::InMemoryEventStore;
+use evented_worker::api::EventStore;
 use cmd_spec::ShellCommand;
-use std::cell::RefCell;
-use std::rc::Rc;
 
-let event_log = Rc::new(RefCell::new(vec![
+let mut store = InMemoryEventStore::from_events(vec![
     get_activity(
         "format-and-lint",
         ActivityParameters {
@@ -43,10 +43,12 @@ let event_log = Rc::new(RefCell::new(vec![
             ],
         },
     ),
-]));
+]);
 
-let mut controller = Controller::new(get_registry(), event_log);
+let mut controller = Controller::new(get_registry(), &mut store);
 let state = controller.start();
+// controller is dropped, borrow ends — store is accessible again
+let events = store.get_events();
 ```
 
 ### Low-level API
@@ -83,11 +85,11 @@ view::summarize::execution_state(&state);
 Activities pass output to the next activity automatically. Use `resolve_prior_output` to wire the output of one activity as input to the next:
 
 ```rust
-let event_log = Rc::new(RefCell::new(vec![
+let mut store = InMemoryEventStore::from_events(vec![
     ActivityEvent::add_sync("0", "fixed_output", Some(json!({ "config": "DATA" }))),
     ActivityEvent::add_sync("1", "echo", None),  // receives output of activity 0
     ActivityEvent::add_sync("2", "echo", None),  // receives output of activity 1
-]));
+]);
 ```
 
 ## How It Works
@@ -184,7 +186,7 @@ cargo run --example update_readme
 Early-stage library. The core event-sourcing loop, synchronous activity execution, and shell command integration are functional.
 
 Known limitations:
-- **Events not persisted**: the controller holds state in memory only — a crash loses all progress
+- **Events not persisted to disk**: the `InMemoryEventStore` holds state in memory only — a crash loses all progress. The `EventStore` trait is ready for a durable backend (e.g. SQLite)
 - **Async activity execution**: event types and state machine exist but processing is not yet implemented
 - **Validators ignored**: `validate_config`/`validate_input` on handlers are defined but never called
 - **Sequential scheduling only**: no DAG-based dependency model; activities run left-to-right
