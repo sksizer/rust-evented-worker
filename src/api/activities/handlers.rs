@@ -60,8 +60,7 @@ macro_rules! serde_module {
                 let input: $IT = serde_json::from_value(raw_input.clone())
                     .map_err(|e| vec![format!("input deserialization failed: {}", e)])?;
                 let result: $OT = ($static_def.execute)(&cfg, &input)?;
-                serde_json::to_value(result)
-                    .map_err(|e| vec![format!("output serialization failed: {}", e)])
+                serde_json::to_value(result).map_err(|e| vec![format!("output serialization failed: {}", e)])
             },
         }
     };

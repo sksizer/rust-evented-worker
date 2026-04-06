@@ -28,12 +28,7 @@ fn example_one() {
 
     let mut store = InMemoryEventStore::from_events(vec![
         Event::add_sync("0", "error", Some(json!({ "config": "DATA" })), None),
-        Event::add_sync(
-            "1",
-            "error",
-            Some(json!({ "config": "DATA" })),
-            Some(vec!["0".to_string()]),
-        ),
+        Event::add_sync("1", "error", Some(json!({ "config": "DATA" })), Some(vec!["0".to_string()])),
     ]);
 
     let mut controller = Controller::new(registry, &mut store);

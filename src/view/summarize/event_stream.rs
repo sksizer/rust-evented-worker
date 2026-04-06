@@ -5,11 +5,7 @@ use colored::Colorize;
 
 pub fn event_stream(events: &EventStream) {
     println!("{}", "─".repeat(REPEAT));
-    println!(
-        "{} {}",
-        "Event Stream:".bold(),
-        format!("({} events)", events.len()).dimmed()
-    );
+    println!("{} {}", "Event Stream:".bold(), format!("({} events)", events.len()).dimmed());
     println!("{}", "─".repeat(REPEAT));
 
     if events.is_empty() {
@@ -46,10 +42,10 @@ pub fn event_stream(events: &EventStream) {
                                 serde_json::to_string(config).unwrap_or_default()
                             );
                         }
-                        if let Some(deps) = &p.depends_on {
-                            if !deps.is_empty() {
-                                println!("         {} {}", "depends_on:".dimmed(), deps.join(", "));
-                            }
+                        if let Some(deps) = &p.depends_on
+                            && !deps.is_empty()
+                        {
+                            println!("         {} {}", "depends_on:".dimmed(), deps.join(", "));
                         }
                     }
                     ActivityEvent::Complete(p) => {
@@ -57,9 +53,7 @@ pub fn event_stream(events: &EventStream) {
                             println!(
                                 "         {} {}",
                                 "output:".dimmed(),
-                                serde_json::to_string_pretty(output)
-                                    .unwrap_or_default()
-                                    .green()
+                                serde_json::to_string_pretty(output).unwrap_or_default().green()
                             );
                         }
                     }
@@ -70,11 +64,7 @@ pub fn event_stream(events: &EventStream) {
                     }
                     ActivityEvent::Error(p) => {
                         if let Some(reason) = &p.reason {
-                            println!(
-                                "         {} {}",
-                                "reason:".dimmed(),
-                                reason.as_str().yellow()
-                            );
+                            println!("         {} {}", "reason:".dimmed(), reason.as_str().yellow());
                         }
                     }
                     ActivityEvent::Start(_) | ActivityEvent::Retry(_) => {}
@@ -82,33 +72,15 @@ pub fn event_stream(events: &EventStream) {
             }
             Event::System(system_event) => match system_event {
                 SystemEvent::Error(data) => {
-                    println!(
-                        "  {} {:>2}. {}",
-                        "⚠".yellow(),
-                        i + 1,
-                        "System::Error".yellow(),
-                    );
-                    println!(
-                        "         {} {}",
-                        "activity_id:".dimmed(),
-                        data.activity_id.bold()
-                    );
+                    println!("  {} {:>2}. {}", "⚠".yellow(), i + 1, "System::Error".yellow(),);
+                    println!("         {} {}", "activity_id:".dimmed(), data.activity_id.bold());
                     println!("         {} {}", "source:".dimmed(), data.source);
                     if !data.errors.is_empty() {
-                        println!(
-                            "         {} {}",
-                            "errors:".dimmed(),
-                            data.errors.join("; ").yellow()
-                        );
+                        println!("         {} {}", "errors:".dimmed(), data.errors.join("; ").yellow());
                     }
                 }
                 SystemEvent::NoProvider(kind) => {
-                    println!(
-                        "  {} {:>2}. {}",
-                        "◌".yellow(),
-                        i + 1,
-                        "System::NoProvider".yellow(),
-                    );
+                    println!("  {} {:>2}. {}", "◌".yellow(), i + 1, "System::NoProvider".yellow(),);
                     println!("         {} {}", "kind:".dimmed(), kind.bold());
                 }
             },

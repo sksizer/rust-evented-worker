@@ -35,36 +35,22 @@ pub struct DefaultExecutionState {
 impl DefaultExecutionState {
     pub fn new(activity_states: Option<Vec<Activity>>) -> Self {
         let activities = activity_states.unwrap_or_default();
-        let activity_map = activities
-            .into_iter()
-            .map(|a| (a.id().to_string(), a))
-            .collect();
-        DefaultExecutionState {
-            activity_to_graph_map: activity_map,
-            activity_graph: Graph::new(),
-            max_retries: 3,
-        }
+        let activity_map = activities.into_iter().map(|a| (a.id().to_string(), a)).collect();
+        DefaultExecutionState { activity_to_graph_map: activity_map, activity_graph: Graph::new(), max_retries: 3 }
     }
 }
 
 /// Side-effect create functions can go on the trait implementation for convenience
 impl ExecutionState for DefaultExecutionState {
     fn new() -> DefaultExecutionState {
-        DefaultExecutionState {
-            activity_to_graph_map: HashMap::new(),
-            activity_graph: Graph::new(),
-            max_retries: 3,
-        }
+        DefaultExecutionState { activity_to_graph_map: HashMap::new(), activity_graph: Graph::new(), max_retries: 3 }
     }
     fn status(&self) -> ExecutionStatus {
         get_execution_status(self)
     }
 
     fn is_stopped(&self) -> bool {
-        matches!(
-            self.status(),
-            ExecutionStatus::Error | ExecutionStatus::Failed | ExecutionStatus::Finished
-        )
+        matches!(self.status(), ExecutionStatus::Error | ExecutionStatus::Failed | ExecutionStatus::Finished)
     }
 
     fn get_activity_state(&self, id: &str) -> Option<&Activity> {
@@ -79,7 +65,7 @@ impl ExecutionState for DefaultExecutionState {
         self.activity_to_graph_map.len()
     }
 
-    fn activity_dependents(&self, id: ActivityId) -> Vec<&Activity> {
+    fn activity_dependents(&self, _id: ActivityId) -> Vec<&Activity> {
         vec![]
     }
 
@@ -120,6 +106,6 @@ mod tests {
     use super::*;
     #[test]
     fn activity_dependents() {
-        let empty_execution_state = DefaultExecutionState::new(None);
+        let _empty_execution_state = DefaultExecutionState::new(None);
     }
 }

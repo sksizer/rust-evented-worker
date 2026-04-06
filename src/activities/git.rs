@@ -1,3 +1,6 @@
+#[allow(dead_code)]
+mod make_worktree;
+
 use crate::api::activities::ModuleDef;
 use crate::api::events::Event;
 use cmd_spec::ShellCommand;

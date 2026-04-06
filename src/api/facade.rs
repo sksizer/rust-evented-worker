@@ -1,5 +1,7 @@
+#[allow(dead_code)]
 pub struct Facade {}
 
+#[allow(dead_code)]
 impl Facade {
     fn new() -> Self {
         Facade {}
@@ -16,6 +18,6 @@ mod tests {
     use super::*;
     #[test]
     fn it_works() {
-        let facade = Facade::new();
+        let _facade = Facade::new();
     }
 }

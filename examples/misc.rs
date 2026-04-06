@@ -14,12 +14,7 @@ use serde_json::json;
 fn main() {
     pretty_env_logger::init();
     let registry = get_registry();
-    let event_stream: EventStream = vec![Event::add_sync(
-        "1",
-        "echo",
-        Some(json!({ "config": "echo" })),
-        None,
-    )];
+    let event_stream: EventStream = vec![Event::add_sync("1", "echo", Some(json!({ "config": "echo" })), None)];
     let mut execution_state = runner::restore(&event_stream);
     view::summarize::execution_state(&execution_state);
 
@@ -62,12 +57,7 @@ fn example_one() {
 fn example_two() {
     trace!("Example 2");
     let mut store = InMemoryEventStore::from_events(vec![
-        get_activity(
-            "0",
-            ActivityParameters {
-                commands: vec![ShellCommand::new("ls")],
-            },
-        ),
+        get_activity("0", ActivityParameters { commands: vec![ShellCommand::new("ls")] }),
         Event::add_sync("echo", "echo", None, None),
     ]);
 

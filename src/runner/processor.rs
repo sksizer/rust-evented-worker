@@ -3,16 +3,12 @@ use crate::api::activities::ActivityEvent;
 use crate::api::events::{Event, SystemErrorData};
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
 use crate::runner::registry::Registry;
-use log::{error, trace};
+use log::trace;
 use serde_json::Value;
 
 /// Knows how to call an activity function. Is at the edge of side effects.
 /// Takes an ActivityEvent (what happened), returns an Event (which may be activity or system).
-pub fn process(
-    state: &DefaultExecutionState,
-    registry: &Registry,
-    activity_event: &ActivityEvent,
-) -> Event {
+pub fn process(state: &DefaultExecutionState, registry: &Registry, activity_event: &ActivityEvent) -> Event {
     trace!("executor - event: {:?}", activity_event);
     let id = activity_event.activity_id().to_string();
     match activity_event {
@@ -20,7 +16,7 @@ pub fn process(
             let activity = state.get_activity_state(activity_id).unwrap();
             let kind = activity.kind();
 
-            let Some(module) = registry.get_module(&kind) else {
+            let Some(module) = registry.get_module(kind) else {
                 return Event::error(id, Some("Could not find activity module".to_string()));
             };
 

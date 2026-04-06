@@ -1,3 +1,9 @@
+# directories
+target/
+
+# files
+**/*.rs.bk
+
+# project-specific
 .env
-/target
 .idea

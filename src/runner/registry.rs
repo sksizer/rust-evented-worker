@@ -1,14 +1,13 @@
 use crate::api::activities::SerdeModule;
 
+#[derive(Default)]
 pub struct Registry {
     modules: Vec<SerdeModule>,
 }
 
 impl Registry {
     pub fn new() -> Registry {
-        Registry {
-            modules: Vec::new(),
-        }
+        Self::default()
     }
 
     pub fn register_module(&mut self, module: SerdeModule) -> Result<(), String> {

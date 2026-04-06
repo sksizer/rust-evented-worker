@@ -37,11 +37,7 @@ impl Event {
         Event::Activity(ActivityEvent::add_sync(id, kind, config, depends_on))
     }
 
-    pub fn add_async(
-        id: impl Into<String>,
-        kind: impl Into<String>,
-        config: Option<Value>,
-    ) -> Self {
+    pub fn add_async(id: impl Into<String>, kind: impl Into<String>, config: Option<Value>) -> Self {
         Event::Activity(ActivityEvent::add_async(id, kind, config))
     }
 

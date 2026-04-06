@@ -3,10 +3,7 @@ use crate::api::execution::{DefaultExecutionState, ExecutionState};
 use serde_json::Value;
 
 /// Returns the output of the first dependency of the given activity.
-pub fn resolve_prior_output(
-    execution_state: &DefaultExecutionState,
-    activity_id: &str,
-) -> Option<Value> {
+pub fn resolve_prior_output(execution_state: &DefaultExecutionState, activity_id: &str) -> Option<Value> {
     let activity = execution_state.get_activity_state(activity_id)?;
     let dep_id = activity.core().depends_on.as_ref()?.first()?;
     let dep = execution_state.get_activity_state(dep_id)?;

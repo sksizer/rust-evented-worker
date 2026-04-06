@@ -5,7 +5,7 @@ mod get_prior_output;
 use crate::api::EventStore;
 use crate::api::activities::ActivityEvent;
 use crate::api::events::Event;
-use crate::api::execution::{DefaultExecutionState, ExecutionState};
+use crate::api::execution::DefaultExecutionState;
 use crate::runner::policy::apply_policy;
 use crate::runner::registry::Registry;
 use crate::runner::{process, reduce, restore, scheduler};
@@ -16,18 +16,15 @@ pub use get_prior_output::resolve_prior_output;
 pub struct Controller<'a> {
     registry: Registry,
     event_store: &'a mut dyn EventStore,
+    #[allow(dead_code)]
     loop_fn: Vec<LoopFn>,
+    #[allow(dead_code)]
     event_handlers: Vec<EventHandlerFn>,
 }
 
 impl<'a> Controller<'a> {
     pub fn new(registry: Registry, event_store: &'a mut dyn EventStore) -> Controller<'a> {
-        Controller {
-            registry,
-            event_store,
-            loop_fn: vec![],
-            event_handlers: vec![],
-        }
+        Controller { registry, event_store, loop_fn: vec![], event_handlers: vec![] }
     }
 
     pub fn start(&mut self) -> DefaultExecutionState {
