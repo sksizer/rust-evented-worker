@@ -73,3 +73,15 @@ alias butd := bring-up-to-date
 bring-up-to-date-all *args:
     bash scripts/bring_up_to_date_all.sh {{args}}
 alias butda := bring-up-to-date-all
+
+
+# ---------------------------------------------------------------------------- #
+#                              PROJECT-SPECIFIC                                #
+# ---------------------------------------------------------------------------- #
+
+sync-crates-out:
+    rsync --archive -z --verbose --delete --exclude='.idea' --exclude='target' --exclude='.git' crates/cmd-spec/ ${CMD_SPEC_PATH}
+    rsync --archive -z --verbose --delete --exclude='.idea' --exclude='target' --exclude='.git' crates/fluent-git/ ${FLUENT_GIT_PATH}
+sync-crates-in:
+    rsync --archive -z --verbose --delete --exclude='.idea' --exclude='target' --exclude='.git' ${CMD_SPEC_PATH}/ crates/cmd-spec/
+    rsync --archive -z --verbose --delete --exclude='.idea' --exclude='target' --exclude='.git' ${FLUENT_GIT_PATH}/ crates/fluent-git/
