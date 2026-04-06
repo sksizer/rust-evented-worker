@@ -35,10 +35,5 @@ pub struct ActivityParameters {
 }
 
 pub fn get_activity(id: &str, activity_parameters: ActivityParameters) -> Event {
-    Event::add_sync(
-        id,
-        SHELL.id,
-        Some(json!({ "commands": activity_parameters.commands })),
-        None,
-    )
+    Event::add_sync(id, SHELL.id, Some(json!({ "commands": activity_parameters.commands })), None)
 }

@@ -1,5 +1,5 @@
 //! Creates a realized execution state from an event stream
-use crate::api::events::{Event, EventStream};
+use crate::api::events::EventStream;
 use crate::api::execution::DefaultExecutionState;
 use crate::runner::reduce::reduce;
 
@@ -37,17 +37,11 @@ mod test {
 
     #[test]
     fn single_activity_progression() {
-        let event_stream = vec![
-            Event::add_sync("1", "alpha", None, None),
-            Event::start("1"),
-            Event::complete("1", None),
-        ];
+        let event_stream =
+            vec![Event::add_sync("1", "alpha", None, None), Event::start("1"), Event::complete("1", None)];
         let execution_state = restore(&event_stream);
         assert_eq!(execution_state.activity_count(), 1);
-        assert!(matches!(
-            execution_state.get_activity_state("1"),
-            Some(Activity::Sync(SyncActivity::Completed(_)))
-        ));
+        assert!(matches!(execution_state.get_activity_state("1"), Some(Activity::Sync(SyncActivity::Completed(_)))));
     }
 
     #[test]
@@ -62,14 +56,8 @@ mod test {
         ];
         let execution_state = restore(&event_stream);
         assert_eq!(execution_state.activity_count(), 2);
-        assert!(matches!(
-            execution_state.get_activity_state("1"),
-            Some(Activity::Sync(SyncActivity::Completed(_)))
-        ));
-        assert!(matches!(
-            execution_state.get_activity_state("2"),
-            Some(Activity::Sync(SyncActivity::Completed(_)))
-        ));
+        assert!(matches!(execution_state.get_activity_state("1"), Some(Activity::Sync(SyncActivity::Completed(_)))));
+        assert!(matches!(execution_state.get_activity_state("2"), Some(Activity::Sync(SyncActivity::Completed(_)))));
     }
 
     #[test]
@@ -87,18 +75,9 @@ mod test {
         ];
         let execution_state = restore(&event_stream);
         assert_eq!(execution_state.activity_count(), 3);
-        assert!(matches!(
-            execution_state.get_activity_state("1"),
-            Some(Activity::Sync(SyncActivity::Completed(_)))
-        ));
-        assert!(matches!(
-            execution_state.get_activity_state("2"),
-            Some(Activity::Sync(SyncActivity::Completed(_)))
-        ));
-        assert!(matches!(
-            execution_state.get_activity_state("3"),
-            Some(Activity::Sync(SyncActivity::Failed(_)))
-        ));
+        assert!(matches!(execution_state.get_activity_state("1"), Some(Activity::Sync(SyncActivity::Completed(_)))));
+        assert!(matches!(execution_state.get_activity_state("2"), Some(Activity::Sync(SyncActivity::Completed(_)))));
+        assert!(matches!(execution_state.get_activity_state("3"), Some(Activity::Sync(SyncActivity::Failed(_)))));
 
         assert_eq!(execution_state.status(), ExecutionStatus::Failed);
     }
@@ -108,9 +87,6 @@ mod test {
         let event_stream = vec![Event::add_async("1", "fetch", None), Event::start("1")];
         let execution_state = restore(&event_stream);
         assert_eq!(execution_state.activity_count(), 1);
-        assert!(matches!(
-            execution_state.get_activity_state("1"),
-            Some(Activity::Async(AsyncActivity::Running(_)))
-        ));
+        assert!(matches!(execution_state.get_activity_state("1"), Some(Activity::Async(AsyncActivity::Running(_)))));
     }
 }

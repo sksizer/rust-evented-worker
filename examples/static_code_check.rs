@@ -39,11 +39,7 @@ pub struct Module {
                           // pub validate: fn(input: &[u8]) -> bool,
 }
 
-pub static WORKTREE_ACTIVITY: Module = Module {
-    id: "worktree_activity",
-    display_name: "Worktree",
-    get_config: || {},
-};
+pub static WORKTREE_ACTIVITY: Module = Module { id: "worktree_activity", display_name: "Worktree", get_config: || {} };
 
 /// Facade to make it easy to compose coding tasks
 pub struct CodingWorkflow {

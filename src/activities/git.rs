@@ -1,3 +1,6 @@
+#[allow(dead_code)]
+mod make_worktree;
+
 use crate::api::activities::ModuleDef;
 use crate::api::events::Event;
 use cmd_spec::ShellCommand;
@@ -35,10 +38,5 @@ pub struct ActivityParameters {
 }
 
 pub fn get_activity(id: &str, activity_parameters: ActivityParameters) -> Event {
-    Event::add_sync(
-        id,
-        SHELL.id,
-        Some(json!({ "commands": activity_parameters.commands })),
-        None,
-    )
+    Event::add_sync(id, SHELL.id, Some(json!({ "commands": activity_parameters.commands })), None)
 }

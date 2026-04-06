@@ -36,31 +36,16 @@ impl<S> Specification<S> {
 // Methods only available when state is New
 impl Specification<New> {
     pub fn create(work_item_id: String, id: String, body: String) -> Self {
-        Specification {
-            work_item_id,
-            id,
-            body,
-            state: New,
-        }
+        Specification { work_item_id, id, body, state: New }
     }
 
     // Transitions: New -> Complete or New -> Attempted
     pub fn complete(self, evidence: Vec<SpecEvidence>) -> Specification<Complete> {
-        Specification {
-            work_item_id: self.work_item_id,
-            id: self.id,
-            body: self.body,
-            state: Complete { evidence },
-        }
+        Specification { work_item_id: self.work_item_id, id: self.id, body: self.body, state: Complete { evidence } }
     }
 
     pub fn attempt(self) -> Specification<Attempted> {
-        Specification {
-            work_item_id: self.work_item_id,
-            id: self.id,
-            body: self.body,
-            state: Attempted { count: 1 },
-        }
+        Specification { work_item_id: self.work_item_id, id: self.id, body: self.body, state: Attempted { count: 1 } }
     }
 }
 
@@ -72,12 +57,7 @@ impl Specification<Attempted> {
     }
 
     pub fn complete(self, evidence: Vec<SpecEvidence>) -> Specification<Complete> {
-        Specification {
-            work_item_id: self.work_item_id,
-            id: self.id,
-            body: self.body,
-            state: Complete { evidence },
-        }
+        Specification { work_item_id: self.work_item_id, id: self.id, body: self.body, state: Complete { evidence } }
     }
 
     pub fn give_up(self, messages: Vec<String>) -> Specification<Failed> {
@@ -85,10 +65,7 @@ impl Specification<Attempted> {
             work_item_id: self.work_item_id,
             id: self.id,
             body: self.body,
-            state: Failed {
-                attempts: self.state.count,
-                messages,
-            },
+            state: Failed { attempts: self.state.count, messages },
         }
     }
 }

@@ -1,6 +1,7 @@
 use crate::api::EventStore;
 use crate::api::events::{Event, EventStream};
 
+#[derive(Default)]
 pub struct InMemoryEventStore {
     events: Vec<Event>,
 }
@@ -18,7 +19,7 @@ impl EventStore for InMemoryEventStore {
 
 impl InMemoryEventStore {
     pub fn new() -> InMemoryEventStore {
-        InMemoryEventStore { events: vec![] }
+        Self::default()
     }
 
     pub fn from_events(events: Vec<Event>) -> InMemoryEventStore {

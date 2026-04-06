@@ -24,15 +24,11 @@ fn main() {
         ),
         get_activity(
             "1",
-            ActivityParameters {
-                commands: vec![ShellCommand::new("git").args(vec!["add", "README.md"])],
-            },
+            ActivityParameters { commands: vec![ShellCommand::new("git").args(vec!["add", "README.md"])] },
         ),
         get_activity(
             "2",
-            ActivityParameters {
-                commands: vec![ShellCommand::new("git_commit_message").args(vec!["-a"])],
-            },
+            ActivityParameters { commands: vec![ShellCommand::new("git_commit_message").args(vec!["-a"])] },
         ),
     ]);
     let mut controller = Controller::new(get_registry(), &mut store);

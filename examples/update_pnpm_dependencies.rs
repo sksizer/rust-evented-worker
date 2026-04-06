@@ -69,12 +69,7 @@ fn example_one() {
         // Commit changes
 
         // Make a PR
-        Event::add_sync(
-            "1",
-            "error",
-            Some(json!({ "config": "DATA" })),
-            Some(vec!["0".to_string()]),
-        ),
+        Event::add_sync("1", "error", Some(json!({ "config": "DATA" })), Some(vec!["0".to_string()])),
     ]);
 
     let mut controller = Controller::new(registry, &mut store);

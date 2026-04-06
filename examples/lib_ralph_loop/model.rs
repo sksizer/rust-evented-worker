@@ -7,8 +7,6 @@ pub struct Database {
 
 impl Database {
     pub fn new() -> Database {
-        Self {
-            work_items: Vec::new(),
-        }
+        Self { work_items: Vec::new() }
     }
 }

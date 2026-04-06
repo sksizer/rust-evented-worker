@@ -3,8 +3,7 @@ mod update_activity;
 mod update_graph;
 
 use crate::api::activities::{
-    Activity, ActivityCore, ActivityEvent, AsyncActivity, AsyncReady, SyncActivity, SyncNew,
-    SyncReady,
+    Activity, ActivityCore, ActivityEvent, AsyncActivity, AsyncReady, SyncActivity, SyncNew, SyncReady,
 };
 use crate::api::events::Event;
 use crate::api::execution::{DefaultExecutionState, ExecutionState};
@@ -15,6 +14,7 @@ use add_activity::append_activity_state;
 use update_activity::update;
 use update_graph::update_graph;
 
+#[allow(dead_code)]
 pub struct ReduceState {
     pub execution_state: DefaultExecutionState,
     pub changed_activity: Option<Activity>,
@@ -78,12 +78,12 @@ fn reduce_activity(
         }
         ActivityEvent::Complete(payload) => {
             let new_activity = match execution_state.get_activity_state(&payload.id) {
-                Some(Activity::Sync(SyncActivity::Running(running))) => Activity::from(
-                    SyncActivity::from(running.clone().complete(payload.output.clone())),
-                ),
-                Some(Activity::Async(AsyncActivity::Running(running))) => Activity::from(
-                    AsyncActivity::from(running.clone().complete(payload.output.clone())),
-                ),
+                Some(Activity::Sync(SyncActivity::Running(running))) => {
+                    Activity::from(SyncActivity::from(running.clone().complete(payload.output.clone())))
+                }
+                Some(Activity::Async(AsyncActivity::Running(running))) => {
+                    Activity::from(AsyncActivity::from(running.clone().complete(payload.output.clone())))
+                }
                 _ => panic!("Invalid activity state for Complete event: {}", payload.id),
             };
             let state = update(execution_state, new_activity).unwrap();
@@ -151,9 +151,7 @@ fn reduce_activity(
                 _ => panic!("Invalid activity state for Retry event: {}", id),
             };
             // Bypass update() since Retry intentionally revives a stopped execution state
-            execution_state
-                .activity_to_graph_map
-                .insert(id.clone(), new_activity);
+            execution_state.activity_to_graph_map.insert(id.clone(), new_activity);
             execution_state
         }
     }

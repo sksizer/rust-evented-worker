@@ -10,10 +10,7 @@ fn quality_check() -> EventStream {
     vec![get_activity(
         "0",
         ActivityParameters {
-            commands: vec![
-                ShellCommand::new("cargo").arg("fmt"),
-                ShellCommand::new("cargo").args(["clippy", "--fix"]),
-            ],
+            commands: vec![ShellCommand::new("cargo").arg("fmt"), ShellCommand::new("cargo").args(["clippy", "--fix"])],
         },
     )]
 }

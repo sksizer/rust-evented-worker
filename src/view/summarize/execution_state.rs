@@ -8,9 +8,7 @@ use petgraph::graph::NodeIndex;
 fn activity_icon(activity: &Activity) -> (ColoredString, ColoredString) {
     match activity {
         Activity::Sync(SyncActivity::New(_)) => ("◌".white(), "New".white()),
-        Activity::Sync(SyncActivity::UnfulfilledDependencies(_)) => {
-            ("◇".white(), "Waiting".white())
-        }
+        Activity::Sync(SyncActivity::UnfulfilledDependencies(_)) => ("◇".white(), "Waiting".white()),
         Activity::Sync(SyncActivity::Ready(_)) => ("○".white(), "Ready".white()),
         Activity::Sync(SyncActivity::Running(_)) => ("●".cyan(), "Running".cyan()),
         Activity::Sync(SyncActivity::Completed(_)) => ("✔".green(), "Completed".green()),
@@ -80,9 +78,7 @@ pub fn execution_state(execution_state: &DefaultExecutionState) {
                     println!(
                         "      {} {}",
                         "output:".dimmed(),
-                        serde_json::to_string_pretty(output)
-                            .unwrap_or_default()
-                            .green()
+                        serde_json::to_string_pretty(output).unwrap_or_default().green()
                     );
                 }
             }
@@ -91,9 +87,7 @@ pub fn execution_state(execution_state: &DefaultExecutionState) {
                     println!(
                         "      {} {}",
                         "output:".dimmed(),
-                        serde_json::to_string_pretty(output)
-                            .unwrap_or_default()
-                            .green()
+                        serde_json::to_string_pretty(output).unwrap_or_default().green()
                     );
                 }
             }
@@ -109,20 +103,12 @@ pub fn execution_state(execution_state: &DefaultExecutionState) {
             }
             Activity::Sync(SyncActivity::Error(se)) => {
                 if let Some(reasons) = &se.failed.failure {
-                    println!(
-                        "      {} {}",
-                        "error:".dimmed(),
-                        reasons.join("; ").yellow()
-                    );
+                    println!("      {} {}", "error:".dimmed(), reasons.join("; ").yellow());
                 }
             }
             Activity::Async(AsyncActivity::Error(ae)) => {
                 if let Some(reasons) = &ae.failed.failure {
-                    println!(
-                        "      {} {}",
-                        "error:".dimmed(),
-                        reasons.join("; ").yellow()
-                    );
+                    println!("      {} {}", "error:".dimmed(), reasons.join("; ").yellow());
                 }
             }
             _ => {}
@@ -160,10 +146,7 @@ fn show_dependency_graph(execution_state: &DefaultExecutionState) {
     println!("{}", "─".repeat(REPEAT));
 
     let Ok(topo_order) = petgraph::algo::toposort(graph, None) else {
-        println!(
-            "  {}",
-            "(cycle detected — graph cannot be displayed)".yellow()
-        );
+        println!("  {}", "(cycle detected — graph cannot be displayed)".yellow());
         return;
     };
 
@@ -172,12 +155,8 @@ fn show_dependency_graph(execution_state: &DefaultExecutionState) {
 
     for &node in &topo_order {
         // Lanes that are pointing to this node (its predecessors' open edges)
-        let mut incoming: Vec<usize> = lanes
-            .iter()
-            .enumerate()
-            .filter(|(_, l)| **l == Some(node))
-            .map(|(i, _)| i)
-            .collect();
+        let mut incoming: Vec<usize> =
+            lanes.iter().enumerate().filter(|(_, l)| **l == Some(node)).map(|(i, _)| i).collect();
         incoming.sort_unstable();
 
         // This node occupies the leftmost incoming lane, or a new lane if it's a root
@@ -206,11 +185,7 @@ fn show_dependency_graph(execution_state: &DefaultExecutionState) {
                     .map(|c| {
                         if c == ec {
                             "/ "
-                        } else if c == my_col && lanes[c].is_some() {
-                            "| "
-                        } else if c > my_col && c < ec && lanes[c].is_some() {
-                            "| "
-                        } else if c < my_col && lanes[c].is_some() {
+                        } else if c != ec && lanes[c].is_some() {
                             "| "
                         } else {
                             "  "
@@ -224,19 +199,14 @@ fn show_dependency_graph(execution_state: &DefaultExecutionState) {
 
         // Render node row: `* ` at my_col, `| ` at other active lanes
         let id = &graph[node];
-        let icon: ColoredString = execution_state
-            .activity_to_graph_map
-            .get(id)
-            .map(|a| activity_icon(a).0)
-            .unwrap_or_else(|| "?".normal());
+        let icon: ColoredString =
+            execution_state.activity_to_graph_map.get(id).map(|a| activity_icon(a).0).unwrap_or_else(|| "?".normal());
 
         let prefix = lane_row(&lanes, my_col, "* ");
         println!("  {}{} {}", prefix.trim_end(), icon, id);
 
         // Compute successors
-        let successors: Vec<NodeIndex> = graph
-            .neighbors_directed(node, Direction::Outgoing)
-            .collect();
+        let successors: Vec<NodeIndex> = graph.neighbors_directed(node, Direction::Outgoing).collect();
 
         // Update lanes for this node's successors
         match successors.as_slice() {
@@ -274,11 +244,7 @@ fn show_dependency_graph(execution_state: &DefaultExecutionState) {
                         .map(|c| {
                             if c == bc {
                                 "\\ "
-                            } else if c == my_col && lanes[c].is_some() {
-                                "| "
-                            } else if c > my_col && c < bc && lanes[c].is_some() {
-                                "| "
-                            } else if c < my_col && lanes[c].is_some() {
+                            } else if c != bc && lanes[c].is_some() {
                                 "| "
                             } else {
                                 "  "

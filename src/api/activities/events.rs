@@ -1,4 +1,4 @@
-use crate::api::activities::{Activity, ActivityId, ActivityKind};
+use crate::api::activities::{ActivityId, ActivityKind};
 use serde_json::Value;
 
 // --- Payloads ---
@@ -43,25 +43,11 @@ impl ActivityEvent {
         config: Option<Value>,
         depends_on: Option<Vec<ActivityId>>,
     ) -> Self {
-        ActivityEvent::AddSync(AddActivityPayload {
-            id: id.into(),
-            kind: kind.into(),
-            config,
-            depends_on,
-        })
+        ActivityEvent::AddSync(AddActivityPayload { id: id.into(), kind: kind.into(), config, depends_on })
     }
 
-    pub fn add_async(
-        id: impl Into<String>,
-        kind: impl Into<String>,
-        config: Option<Value>,
-    ) -> Self {
-        ActivityEvent::AddAsync(AddActivityPayload {
-            id: id.into(),
-            kind: kind.into(),
-            config,
-            depends_on: None,
-        })
+    pub fn add_async(id: impl Into<String>, kind: impl Into<String>, config: Option<Value>) -> Self {
+        ActivityEvent::AddAsync(AddActivityPayload { id: id.into(), kind: kind.into(), config, depends_on: None })
     }
 
     pub fn start(id: impl Into<String>) -> Self {
@@ -69,24 +55,15 @@ impl ActivityEvent {
     }
 
     pub fn complete(id: impl Into<String>, output: Option<Value>) -> Self {
-        ActivityEvent::Complete(CompletePayload {
-            id: id.into(),
-            output,
-        })
+        ActivityEvent::Complete(CompletePayload { id: id.into(), output })
     }
 
     pub fn failed(id: impl Into<String>, reason: Option<String>) -> Self {
-        ActivityEvent::Failed(FailurePayload {
-            id: id.into(),
-            reason,
-        })
+        ActivityEvent::Failed(FailurePayload { id: id.into(), reason })
     }
 
     pub fn error(id: impl Into<String>, reason: Option<String>) -> Self {
-        ActivityEvent::Error(FailurePayload {
-            id: id.into(),
-            reason,
-        })
+        ActivityEvent::Error(FailurePayload { id: id.into(), reason })
     }
 
     pub fn retry(id: impl Into<String>) -> Self {

@@ -1,4 +1,4 @@
-use crate::api::activities::{Activity, SyncActivity, SyncNew};
+use crate::api::activities::Activity;
 use crate::api::execution::{DefaultExecutionState, ExecutionState, ExecutionStateError};
 
 pub fn append_activity_state(
@@ -9,15 +9,13 @@ pub fn append_activity_state(
         return Err(ExecutionStateError::DuplicateActivityIdError);
     }
 
-    if let Some(deps) = &activity.core().depends_on {
-        if deps.contains(&activity.id().to_string()) {
-            return Err(ExecutionStateError::SelfReferentialDependency);
-        }
+    if let Some(deps) = &activity.core().depends_on
+        && deps.contains(&activity.id().to_string())
+    {
+        return Err(ExecutionStateError::SelfReferentialDependency);
     }
 
-    execution_state
-        .activity_to_graph_map
-        .insert(activity.id().to_string(), activity);
+    execution_state.activity_to_graph_map.insert(activity.id().to_string(), activity);
     Ok(execution_state)
 }
 
@@ -41,8 +39,7 @@ mod tests {
 
     #[test]
     fn append_activity_state_with_duplicate_id_error() {
-        let execution_state =
-            DefaultExecutionState::new(Some(vec![make_ready_activity("1", "alpha")]));
+        let execution_state = DefaultExecutionState::new(Some(vec![make_ready_activity("1", "alpha")]));
 
         let result = append_activity_state(execution_state, make_ready_activity("1", "beta"));
         assert!(result.is_err());
@@ -63,8 +60,7 @@ mod tests {
 
     #[test]
     fn append_activity_state_with_dependents() {
-        let execution_state =
-            DefaultExecutionState::new(Some(vec![make_ready_activity("1", "alpha")]));
+        let execution_state = DefaultExecutionState::new(Some(vec![make_ready_activity("1", "alpha")]));
         let activity = make_new_activity_with_deps("2", "beta", vec!["1".into()]);
         let result = append_activity_state(execution_state, activity);
         assert!(result.is_ok());
@@ -75,9 +71,6 @@ mod tests {
         let execution_state = DefaultExecutionState::new(None);
         let activity = make_new_activity_with_deps("1", "alpha", vec!["1".into()]);
         let result = append_activity_state(execution_state, activity);
-        assert!(matches!(
-            result,
-            Err(ExecutionStateError::SelfReferentialDependency)
-        ));
+        assert!(matches!(result, Err(ExecutionStateError::SelfReferentialDependency)));
     }
 }

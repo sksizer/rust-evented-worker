@@ -75,54 +75,27 @@ impl SyncNew {
 
 impl SyncNew {
     pub fn make_ready(self, input: Option<Value>) -> SyncReady {
-        SyncReady {
-            core: self.core,
-            input,
-        }
+        SyncReady { core: self.core, input }
     }
 }
 
 impl SyncReady {
     pub fn start(self) -> SyncRunning {
-        SyncRunning {
-            core: self.core,
-            ran: RanActivity {
-                started_at: Utc::now(),
-                input: self.input,
-            },
-        }
+        SyncRunning { core: self.core, ran: RanActivity { started_at: Utc::now(), input: self.input } }
     }
 }
 
 impl SyncRunning {
     pub fn complete(self, output: Option<Value>) -> SyncCompleted {
-        SyncCompleted {
-            core: self.core,
-            completed: CompletedActivity {
-                ran: self.ran,
-                output,
-            },
-        }
+        SyncCompleted { core: self.core, completed: CompletedActivity { ran: self.ran, output } }
     }
 
     pub fn fail(self, failure: Failure) -> SyncFailed {
-        SyncFailed {
-            core: self.core,
-            failed: FailedActivity {
-                ran: self.ran,
-                failure,
-            },
-        }
+        SyncFailed { core: self.core, failed: FailedActivity { ran: self.ran, failure } }
     }
 
     pub fn error(self, failure: Failure) -> SyncError {
-        SyncError {
-            core: self.core,
-            failed: FailedActivity {
-                ran: self.ran,
-                failure,
-            },
-        }
+        SyncError { core: self.core, failed: FailedActivity { ran: self.ran, failure } }
     }
 }
 
@@ -171,45 +144,21 @@ impl AsyncReady {
 
 impl AsyncReady {
     pub fn start(self, input: Option<Value>) -> AsyncRunning {
-        AsyncRunning {
-            core: self.core,
-            ran: RanActivity {
-                started_at: Utc::now(),
-                input,
-            },
-        }
+        AsyncRunning { core: self.core, ran: RanActivity { started_at: Utc::now(), input } }
     }
 }
 
 impl AsyncRunning {
     pub fn complete(self, output: Option<Value>) -> AsyncCompleted {
-        AsyncCompleted {
-            core: self.core,
-            completed: CompletedActivity {
-                ran: self.ran,
-                output,
-            },
-        }
+        AsyncCompleted { core: self.core, completed: CompletedActivity { ran: self.ran, output } }
     }
 
     pub fn fail(self, failure: Failure) -> AsyncFailed {
-        AsyncFailed {
-            core: self.core,
-            failed: FailedActivity {
-                ran: self.ran,
-                failure,
-            },
-        }
+        AsyncFailed { core: self.core, failed: FailedActivity { ran: self.ran, failure } }
     }
 
     pub fn error(self, failure: Failure) -> AsyncError {
-        AsyncError {
-            core: self.core,
-            failed: FailedActivity {
-                ran: self.ran,
-                failure,
-            },
-        }
+        AsyncError { core: self.core, failed: FailedActivity { ran: self.ran, failure } }
     }
 }
 
@@ -397,11 +346,8 @@ impl Activity {
     pub fn is_closed(&self) -> bool {
         matches!(
             self,
-            Activity::Sync(
-                SyncActivity::Completed(_) | SyncActivity::Failed(_) | SyncActivity::Error(_)
-            ) | Activity::Async(
-                AsyncActivity::Completed(_) | AsyncActivity::Failed(_) | AsyncActivity::Error(_)
-            )
+            Activity::Sync(SyncActivity::Completed(_) | SyncActivity::Failed(_) | SyncActivity::Error(_))
+                | Activity::Async(AsyncActivity::Completed(_) | AsyncActivity::Failed(_) | AsyncActivity::Error(_))
         )
     }
 
@@ -414,25 +360,15 @@ impl Activity {
     }
 
     pub fn is_completed(&self) -> bool {
-        matches!(
-            self,
-            Activity::Sync(SyncActivity::Completed(_))
-                | Activity::Async(AsyncActivity::Completed(_))
-        )
+        matches!(self, Activity::Sync(SyncActivity::Completed(_)) | Activity::Async(AsyncActivity::Completed(_)))
     }
 
     pub fn is_failed(&self) -> bool {
-        matches!(
-            self,
-            Activity::Sync(SyncActivity::Failed(_)) | Activity::Async(AsyncActivity::Failed(_))
-        )
+        matches!(self, Activity::Sync(SyncActivity::Failed(_)) | Activity::Async(AsyncActivity::Failed(_)))
     }
 
     pub fn is_error(&self) -> bool {
-        matches!(
-            self,
-            Activity::Sync(SyncActivity::Error(_)) | Activity::Async(AsyncActivity::Error(_))
-        )
+        matches!(self, Activity::Sync(SyncActivity::Error(_)) | Activity::Async(AsyncActivity::Error(_)))
     }
 }
 
