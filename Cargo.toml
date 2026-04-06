@@ -1,5 +1,5 @@
 [workspace]
-members = [".", "crates/cmd-spec"]
+members = ["."]
 
 [package]
 name = "evented-worker"
@@ -8,7 +8,8 @@ edition = "2024"
 default-run = "evented-worker"
 
 [dependencies]
-cmd-spec = { path = "crates/cmd-spec", features = ["tokio"] }
+# cmd-spec = { path = "crates/cmd-spec", features = ["tokio"] }
+cmd-spec = { version= "^0.10.0", features = ["tokio"] }
 thiserror = "2.0.18"
 colored = "3"
 serde_json = "1.0.149"
